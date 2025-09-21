@@ -1,0 +1,18 @@
+server:
+  port: 8080
+
+spring:
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+grpc:
+  client:
+    auth-service:
+      address: 'static://auth-service:9091'
+      negotiation-type: plaintext
+    greeting-service:
+      address: 'static://greeting-service:9090'
+      negotiation-type: plaintext
