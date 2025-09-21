@@ -1,0 +1,66 @@
+Workflow and Functions
+
+Personal Banking (Flutter, React)
+- Register
+- Login
+- Total Balance
+- Transfer (Account to Account)
+- Payment Features (Merchant Payment -> e.g. Mobile Legends Diamond buy...)
+- Manage Nickname (Receiver)
+- View Profile
+- View my accounts ....
+- Setting -> NRC (input), NRC(image) -> check (Ai) -> correct
+- FAQ chatbot -
+
+------------------------
+
+---From Account Dropdown
+-----nickname----------
+02903293034903--------
+-----amount-----------
+----------------------
+
+------------------------
+Corporate (React)
+
+- Super Admin
+
+- Login (Role Based)
+- Dashboard
+- Manage Accounts from his Organization
+- Manage Rulesetup (Approval Matrix, Payrole ruleset, Merchant Payment type)
+- Manage User Group (Maker, Checker)
+- Add group, Remove User from Group
+- View Upload File List
+- View Transaction History
+------------------------------------
+- Maker
+
+- Upload payroll file (excel, csv) -> fileType String
+- View Upload File List
+- View Transaction History
+- Reupload if validation fail
+- if validation pass, confirm OTP
+------------------------------------
+- Checker
+
+- View Upload File List
+- View Transaction History
+- Check file based on setup rule
+------------------------------------
+Bank (Admin)
+
+- Dashboard
+- Manage organization (*org email)
+- Manage accounts for all organization (Join Account)
+- Approve / Reject Individual Account By Bank
+- Manage FAQ
+
+
+chatbot flow 
+
+how to upload excel file?
+go dashboard/ Upload File List, click button
+
+customer input -> how can i upload...
+ai -> grammar
