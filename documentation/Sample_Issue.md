@@ -1,4 +1,6 @@
 ### Ticket ID: Banking-FE001 or Banking-BE001 or Banking-MB001 (FE for frontend) (BE for backend) (MB for Mobile)
+> ✅ FE for frontend, BE for backend, MB for Mobile
+
 ## Summary
 Provision S3 Bucket for Static Site Deployment via Terraform
 
