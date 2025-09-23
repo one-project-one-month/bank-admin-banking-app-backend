@@ -1,4 +1,4 @@
-### Ticket ID: Banking-FE001 or Banking-BE001 or Banking-MB001 (FE for frontend) (BE for backend) (MB for Mobile)
+### Ticket ID: Banking-FE001 or Banking-BE001 or Banking-MB001
 > ✅ FE for frontend, BE for backend, MB for Mobile
 
 ## Summary
