@@ -16,3 +16,6 @@ grpc:
     greeting-service:
       address: 'static://greeting-service:9090'
       negotiation-type: plaintext
+    product-service:
+      address: 'static://product-service:9092'
+      negotiation-type: plaintext
