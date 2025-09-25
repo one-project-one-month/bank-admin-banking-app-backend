@@ -1,12 +1,16 @@
 package com.corporatebanking.gateway.controller.users;
 
 import com.corporatebanking.organization.grpc.*;
+
+import com.corporatebanking.gateway.dto.nrc.NrcCodeResponseDto;
+
 import com.corporatebanking.gateway.dto.organization.CreateOrganizationRequestDto;
 import com.corporatebanking.gateway.dto.organization.OrganizationResponseDto;
 import com.corporatebanking.gateway.dto.organization.UpdateOrganizationRequestDto;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.corporatebanking.nrc.grpc.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -17,6 +21,9 @@ public class OrganizationController {
 
     @GrpcClient("user-service")
     private OrganizationServiceGrpc.OrganizationServiceBlockingStub organizationServiceStub;
+
+    @GrpcClient("user-service")
+    private NrcServiceGrpc.NrcServiceBlockingStub nrcServiceStub;
 
     @PostMapping
     public ResponseEntity<OrganizationResponseDto> createOrganization(@RequestBody CreateOrganizationRequestDto requestDto) {
@@ -81,5 +88,21 @@ public class OrganizationController {
                 response.getCreatedBy(),
                 response.getUpdatedBy()
         );
+    }
+
+    @GetMapping("/nrc/codes")
+    public ResponseEntity<List<NrcCodeResponseDto>> getAllNrcCodes() {
+        GetAllNrcCodesRequest request = GetAllNrcCodesRequest.newBuilder().build();
+        NrcCodeListResponse response = nrcServiceStub.getAllNrcCodes(request);
+        
+        List<NrcCodeResponseDto> dtos = response.getCodesList().stream()
+            .map(this::toNrcDto)
+            .collect(Collectors.toList());
+            
+        return ResponseEntity.ok(dtos);
+    }
+
+    private NrcCodeResponseDto toNrcDto(NrcCodeResponse grpcResponse) {
+        return new NrcCodeResponseDto(grpcResponse.getId(), grpcResponse.getName());
     }
 }

@@ -22,11 +22,25 @@ services:
       timeout: 5s
       retries: 5
 
+  nrc-service:
+    build: ../nrc-service
+    networks:
+      - banknet
+    ports:
+      - "3002:3002"
+      - "9093:9093"
+    environment:
+      - DB_URL=${CORPORATE_DB_URL}
+      - DB_USERNAME=${CORPORATE_DB_USERNAME}
+      - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
+
   user-service:
     build: ../user-service
     depends_on:
       kafka:
         condition: service_healthy
+      nrc-service:
+        condition: service_started
     networks:
       - banknet
     ports:
