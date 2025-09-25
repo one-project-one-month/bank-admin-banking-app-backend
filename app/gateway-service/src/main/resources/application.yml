@@ -10,6 +10,6 @@ spring:
 
 grpc:
   client:
-    auth-service:
+    user-service:
       address: 'static://user-service:9091'
       negotiation-type: plaintext
