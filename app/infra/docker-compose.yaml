@@ -1,0 +1,73 @@
+services:
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - "9092:9092"
+    networks:
+      - banknet
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build: ../user-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - banknet
+    ports:
+      - "3001:3001"
+      - "9091:9091"
+    environment:
+      - DB_URL=${CORPORATE_DB_URL}
+      - DB_USERNAME=${CORPORATE_DB_USERNAME}
+      - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
+
+  mail-service:
+    build: ../mail-service
+    networks:
+      - banknet
+    ports:
+      - "7000:7000"
+
+  upload-service:
+    build: ../upload-service
+    networks:
+      - banknet
+    ports:
+      - "8001:8000"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_OWNER=${GITHUB_OWNER}
+      - GITHUB_REPO=${GITHUB_REPO}
+      - GITHUB_TARGET_FOLDER=${GITHUB_TARGET_FOLDER}
+
+  gateway-service:
+    build: ../gateway-service
+    depends_on:
+      user-service:
+        condition: service_started
+      kafka:
+        condition: service_healthy
+    networks:
+      - banknet
+    ports:
+      - "8080:8080"
+
+networks:
+  banknet:
+    driver: bridge
