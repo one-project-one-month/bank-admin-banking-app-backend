@@ -1,4 +1,4 @@
-package com.sample.upload;
+package com.corporatebanking.upload;
 
 import java.util.Objects;
 

@@ -1,8 +1,8 @@
-package com.sample.gateway.controller;
+package com.corporatebanking.gateway.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sample.gateway.dto.EmailRequest;
+import com.corporatebanking.gateway.dto.EmailRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

@@ -1,4 +1,4 @@
-package com.sample.upload;
+package com.corporatebanking.upload;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.javalin.Javalin;

@@ -1,4 +1,4 @@
-package com.sample.gateway.controller;
+package com.corporatebanking.gateway.controller;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;

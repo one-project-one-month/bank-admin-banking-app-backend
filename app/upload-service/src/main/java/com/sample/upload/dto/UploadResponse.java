@@ -1,4 +1,4 @@
-package com.sample.gateway.dto;
+package com.corporatebanking.gateway.dto;
 
 public record UploadResponse(
     String message,

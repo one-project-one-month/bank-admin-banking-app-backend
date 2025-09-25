@@ -1,4 +1,4 @@
-package com.sample.gateway.config;
+package com.corporatebanking.gateway.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

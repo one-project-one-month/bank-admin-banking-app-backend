@@ -1,4 +1,4 @@
-package com.sample.mail;
+package com.corporatebanking.mail;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

@@ -1,4 +1,4 @@
-package com.sample.mail;
+package com.corporatebanking.mail;
 
 public record Email(
     String to,

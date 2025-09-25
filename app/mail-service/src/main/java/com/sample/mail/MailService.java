@@ -1,4 +1,4 @@
-package com.sample.mail;
+package com.corporatebanking.mail;
 
 import io.javalin.Javalin;
 

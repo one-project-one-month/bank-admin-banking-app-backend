@@ -1,4 +1,4 @@
-package com.sample.mail;
+package com.corporatebanking.mail;
 
 import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
