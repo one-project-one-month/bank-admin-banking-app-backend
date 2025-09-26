@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Organization Service API
+  description: REST API for managing organizations, backed by gRPC `OrganizationService`.
+  version: 1.0.0
+servers:
+  - url: /api/v1
+paths:
+  /organizations:
+    post:
+      tags:
+      - Organization
+      summary: Create a new organization
+      operationId: createOrganization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequestDto'
+      responses:
+        '200':
+          description: Organization created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseOrganization'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Organization
+      summary: Get all organizations
+      operationId: getAllOrganizations
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseOrganizationList'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /organizations/{id}:
+    get:
+      tags:
+        - Organization
+      summary: Get an organization by ID
+      operationId: getOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseOrganization'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - Organization
+      summary: Update an existing organization
+      operationId: updateOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrganizationRequestDto'
+      responses:
+        '200':
+          description: Updated organization details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseOrganization'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - Organization
+      summary: Delete an organization
+      operationId: deleteOrganization
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Organization deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponseMessage'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # -------------------- REQUEST DTOs --------------------
+    CreateOrganizationRequestDto:
+      type: object
+      required: [name, shortcode, address, country, createdBy]
+      properties:
+        name:
+          type: string
+          example: Corporate Bank Ltd.
+        shortcode:
+          type: string
+          example: CBL
+        address:
+          type: string
+          example: 123 Bank Street, Yangon
+        country:
+          type: string
+          example: Myanmar
+        createdBy:
+          type: integer
+          format: int64
+          example: 1001
+    UpdateOrganizationRequestDto:
+      type: object
+      required: [name, shortcode, address, country, updatedBy]
+      properties:
+        name:
+          type: string
+          example: Corporate Bank Ltd. Updated
+        shortcode:
+          type: string
+          example: CBLU
+        address:
+          type: string
+          example: 456 New Bank Street, Mandalay
+        country:
+          type: string
+          example: Myanmar
+        updatedBy:
+          type: integer
+          format: int64
+          example: 2002
+
+    # -------------------- CORE DTO --------------------
+    OrganizationResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: Corporate Bank Ltd.
+        shortcode:
+          type: string
+          example: CBL
+        address:
+          type: string
+          example: 123 Bank Street, Yangon
+        country:
+          type: string
+          example: Myanmar
+        createdAt:
+          type: string
+          format: date-time
+          example: '2025-09-25T14:00:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2025-09-25T16:30:00Z'
+        createdBy:
+          type: integer
+          format: int64
+          example: 1001
+        updatedBy:
+          type: integer
+          format: int64
+          example: 2002
+
+    # -------------------- WRAPPER RESPONSES --------------------
+    SuccessResponseOrganization:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Organization retrieved successfully
+        data:
+          $ref: '#/components/schemas/OrganizationResponseDto'
+
+    SuccessResponseOrganizationList:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Organizations retrieved successfully
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationResponseDto'
+        pagination:
+          type: object
+          properties:
+            currentPage:
+              type: integer
+              example: 1
+            total:
+              type: integer
+              example: 50
+            pageSize:
+              type: integer
+              example: 10
+
+    SuccessResponseMessage:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Organization deleted successfully
+        data:
+          type: object
+          example: {}
+
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 403
+        message:
+          type: string
+          example: Forbidden
