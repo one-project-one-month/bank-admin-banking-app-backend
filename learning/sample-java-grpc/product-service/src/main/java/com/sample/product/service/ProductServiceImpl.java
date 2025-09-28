@@ -1,6 +1,6 @@
 package com.sample.product.grpc;
 
-import com.sample.product.grpc.ProductServiceGrpc;
+import com.sample.pro.ProductServiceGrpc;
 import com.sample.product.model.Product;
 import com.sample.product.repository.ProductRepository;
 import io.grpc.stub.StreamObserver;
