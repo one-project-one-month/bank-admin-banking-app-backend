@@ -22,6 +22,29 @@ services:
       timeout: 5s
       retries: 5
 
+  transaction-service:
+    build: ../transaction-service
+    networks:
+      - banknet
+    ports:
+      - "1001:1001"
+      - "9095:9095"
+    environment:
+      - DB_URL=${CORPORATE_DB_URL}
+      - DB_USERNAME=${CORPORATE_DB_USERNAME}
+      - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
+  faq-service:
+    build: ../faq-service
+    networks:
+      - banknet
+    ports:
+      - "2001:2001"
+      - "9094:9094"
+    environment:
+      - DB_URL=${CORPORATE_DB_URL}
+      - DB_USERNAME=${CORPORATE_DB_USERNAME}
+      - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
+
   nrc-service:
     build: ../nrc-service
     networks:
@@ -74,6 +97,10 @@ services:
     build: ../gateway-service
     depends_on:
       user-service:
+        condition: service_started
+      faq-service:
+        condition: service_started
+      transaction-service:
         condition: service_started
       kafka:
         condition: service_healthy
