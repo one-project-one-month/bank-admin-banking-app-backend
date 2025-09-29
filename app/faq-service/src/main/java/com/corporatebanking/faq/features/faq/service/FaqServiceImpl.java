@@ -8,10 +8,13 @@ import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.format.DateTimeFormatter;
+
 @GrpcService
 public class FaqServiceImpl extends com.corporatebanking.faq.grpc.FaqServiceGrpc.FaqServiceImplBase {
 
     private final FaqJdbcRepository faqJdbcRepository;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Autowired
     public FaqServiceImpl(FaqJdbcRepository faqJdbcRepository){
@@ -33,7 +36,7 @@ public class FaqServiceImpl extends com.corporatebanking.faq.grpc.FaqServiceGrpc
                 .setId(result.id())
                 .setQuestion(result.question())
                 .setAnswer(result.answer())
-                .setCreatedAt(result.createdAt().toString())
+                .setCreatedAt(result.createdAt().format(dateFormatter))
                 .build();
 
         responseObserver.onNext(faqResponse);

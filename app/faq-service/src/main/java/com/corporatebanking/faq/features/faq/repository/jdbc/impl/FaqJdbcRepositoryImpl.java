@@ -25,8 +25,8 @@ public class FaqJdbcRepositoryImpl implements FaqJdbcRepository {
             rs.getInt("id"),
             rs.getString("question"),
             rs.getString("answer"),
-            rs.getDate("created_at") != null ? rs.getDate("created_at").toLocalDate() : null,
-            rs.getDate("updated_at") != null ? rs.getDate("updated_at").toLocalDate() : null
+            rs.getDate("created_at") != null ? rs.getTimestamp("created_at").toLocalDateTime(): null,
+            rs.getDate("updated_at") != null ? rs.getTimestamp("updated_at").toLocalDateTime() : null
     );
 
     @Override
@@ -39,6 +39,7 @@ public class FaqJdbcRepositoryImpl implements FaqJdbcRepository {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1,faqData.question());
             ps.setString(2, faqData.answer());
+            System.out.println("before query : " + ps);
             return ps;
         }, keyHolder);
 

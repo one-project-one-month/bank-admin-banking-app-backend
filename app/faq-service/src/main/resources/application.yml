@@ -1,19 +1,21 @@
 server:
   port: 2001
 
-#spring:
-#  datasource:
-#    url: ${DB_URL}
-#    username: ${DB_USERNAME}
-#    password: ${DB_PASSWORD}
-#    driverClassName: org.postgresql.Driver
-
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/corporate_banking
-    username: postgres
-    password: admin
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driverClassName: org.postgresql.Driver
+
+
+#for testing
+#spring:
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/corporate_banking
+#    username: postgres
+#    password: admin
+#    driverClassName: org.postgresql.Driver
 
 
 grpc:
