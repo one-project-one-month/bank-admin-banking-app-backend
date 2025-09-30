@@ -13,3 +13,6 @@ grpc:
     user-service:
       address: 'static://user-service:9091'
       negotiation-type: plaintext
+    faq-service:
+      address: 'static://localhost:9004'
+      negotiation-type: plaintext

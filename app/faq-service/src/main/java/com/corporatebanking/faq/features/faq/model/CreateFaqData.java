@@ -1,9 +1,8 @@
 package com.corporatebanking.faq.features.faq.model;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public record FaqData(
+public record CreateFaqData(
         Integer id,
         String question,
         String answer,
