@@ -1,14 +1,15 @@
 name: Set Matrix
 
 on:
-  workflow_call:
-    outputs:
-      matrix:
-        description: "Matrix of changed microservices"
-        value: ${{ jobs.set-matrix.outputs.matrix }}
-      has-changes:
-        description: "Whether any services changed"
-        value: ${{ jobs.set-matrix.outputs.has-changes }}
+  push:
+    branches:
+      - dev
+      - ft/**
+  pull_request:
+    branches:
+      - dev
+      - ft/**
+
 
 jobs:
   set-matrix:
