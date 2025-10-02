@@ -1,4 +1,4 @@
-name: Set Matrix
+name: Build and Test Services
 
 on:
   push:
