@@ -16,7 +16,6 @@ import java.util.Map;
 @Path("/auth")
 public class AuthResource {
 
-    // Test line for CI/CD trigger
 
     @Inject
     AuthService authService;

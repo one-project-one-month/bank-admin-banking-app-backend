@@ -140,3 +140,15 @@ jobs:
         shell: bash
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
+
+  build:
+    needs: set-matrix
+    if: needs.set-matrix.outputs.has-changes == 'true'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    
+    # Call the reusable workflow for each service in the matrix
+    uses: ./.github/workflows/maven-ci.yml
+    with:
+      service: ${{ matrix.service }}
