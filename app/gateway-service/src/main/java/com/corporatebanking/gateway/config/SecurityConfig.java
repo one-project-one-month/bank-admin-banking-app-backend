@@ -34,9 +34,10 @@ public class SecurityConfig {
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/auth/login")
+                .securityMatcher("/auth/login", "/api/v1/transaction")
                 .addFilterBefore(requestLoggingFilter, AuthorizationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.POST, "/api/v1/transaction").permitAll()
                         .anyRequest().permitAll()
                 );
         return http.build();
