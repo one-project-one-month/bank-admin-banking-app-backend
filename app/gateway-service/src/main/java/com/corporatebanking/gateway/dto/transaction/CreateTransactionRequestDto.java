@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 
 public record CreateTransactionRequestDto(
     Long creditAccountId,
-    Long debitAccoutnId,
+    Long debitAccountId,
     BigDecimal amount,
     String transactionType,
     Long transactionGroupId

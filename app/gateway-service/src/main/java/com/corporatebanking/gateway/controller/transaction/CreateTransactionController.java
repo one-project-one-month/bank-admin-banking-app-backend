@@ -32,7 +32,7 @@ public class CreateTransactionController {
     public ResponseEntity<CreateTransactionResponseDto> createTransaction(@RequestBody CreateTransactionRequestDto request) throws JsonProcessingException {
         com.corporatebanking.transaction.proto.CreateTransactionRequest createTransactionRequest = com.corporatebanking.transaction.proto.CreateTransactionRequest.newBuilder()
                 .setCreditAccountId(request.creditAccountId())
-                .setDebitAccountId(request.debitAccoutnId())
+                .setDebitAccountId(request.debitAccountId())
                 .setAmount(request.amount().toString())
                 .setTransactionType(request.transactionType())
                 .setTransactionGroupId(request.transactionGroupId())
