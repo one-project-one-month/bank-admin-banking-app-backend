@@ -19,5 +19,5 @@ grpc:
       address: 'static://user-service:9091'
       negotiation-type: plaintext
     transaction-service:
-      address: 'static://transaction-service:9005'
+      address: 'static://transaction-service:9095'
       negotiation-type: plaintext
