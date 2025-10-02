@@ -87,7 +87,7 @@ jobs:
               CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
             fi
 
-            # if the workflow file itself has changed, rebuild all services for safety.
+            # if the workflow file itself has changed, we rebuild all services for safety.
             if echo "$CHANGED_FILES" | grep -q '^\.github/workflows/'; then
               echo " Workflow changed - will build all services"
               CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
@@ -148,7 +148,27 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
     
-    # Call the reusable workflow for each service in the matrix
+    # call the reusable workflow for each service in the matrix
     uses: ./.github/workflows/maven-ci.yml
     with:
       service: ${{ matrix.service }}
+
+  lint:
+    name: Run Code Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # super-Linter needs the full git history to compare against the default branch
+          fetch-depth: 0
+
+      - name: Run Super-Linter
+        uses: github/super-linter@v5
+        env:
+          # ensure that all files are scanned, not just the ones changed in a PR
+          VALIDATE_ALL_CODE_BASE: true
+          # set  default branch
+          DEFAULT_BRANCH: dev
+          # The GITHUB_TOKEN is required for Super-Linter to function correctly
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
