@@ -9,7 +9,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+// import jakarta.ws.rs.core.Response;
 
 import java.util.Map;
 
@@ -22,11 +22,11 @@ public class AuthResource {
     AuthService authService;
 
     @POST
-    @Path("/login")
+    @Path("/login"
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest loginRequest) {
-        String token = authService.authenticate(loginRequest.username(), loginRequest.password());
+        String token = authService.authenticate(loginRequest.username(), loginRequest.password())
         if (token != null) {
             return Response.ok(new TokenResponse(token)).build();
         }
