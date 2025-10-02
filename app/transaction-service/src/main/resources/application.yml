@@ -8,18 +8,6 @@ spring:
     password: ${DB_PASSWORD}
     driverClassName: org.postgresql.Driver
 
-
-#For testing
-#  datasource:
-#    url: jdbc:h2:mem:transactiondb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
-#    username: sa
-#    password: ""
-#    driverClassName: org.h2.Driver
-#
-#    h2:
-#      console:
-#        enabled: true
-
 grpc:
   server:
     port: 9095
