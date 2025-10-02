@@ -32,7 +32,7 @@ class UserServiceTest {
         // Arrange
         Long userId = 1L;
         UserData expectedUser = new UserData(
-            userId, 
+            userId,
             "testuser", 
             "test@example.com", 
             "password123",
@@ -84,8 +84,8 @@ class UserServiceTest {
         // Test with zero ID
         Optional<UserData> result3 = userService.getUserById(0L);
         assertFalse(result3.isPresent());
-
-        // Verify repository was never called for invalid IDs
+        
+        // Since our service validates IDs, repository should never be called for invalid IDs
         verify(userRepository, never()).findById(any());
     }
 }

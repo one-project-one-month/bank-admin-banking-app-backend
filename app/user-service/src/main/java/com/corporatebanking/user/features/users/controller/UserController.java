@@ -36,11 +36,11 @@ public class UserController {
     }
     
     /**
-     * Health check endpoint
+     * Service status check endpoint
      * @return simple status message
      */
-    @GetMapping("/health")
-    public ResponseEntity<String> health() {
+    @GetMapping("/status")
+    public ResponseEntity<String> getServiceStatus() {
         return ResponseEntity.ok("User service is running!");
     }
 }
