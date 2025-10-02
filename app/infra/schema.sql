@@ -94,6 +94,27 @@ CREATE TABLE "nrc_code_value" (
     FOREIGN KEY ("code_id") REFERENCES "nrc_code"("id") ON DELETE CASCADE
 );
 
+--create account type table
+CREATE TABLE "account_type" (
+        id BIGSERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL
+);
+
+--Create table for storing transactions
+CREATE TABLE "transactions" (
+        id BIGSERIAL PRIMARY KEY,
+        account_type_id BIGINT NOT NULL,
+        account_number VARCHAR(255) NOT NULL UNIQUE,
+        name VARCHAR(255) NOT NULL,
+        amount DOUBLE PRECISION NOT NULL,
+        note TEXT,
+        created_at DATE NOT NULL,
+        updated_at DATE,
+
+    -- Foreign key constraint
+    CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(id)
+);
+
 -- Insert NRC code categories (States/Regions and NRC Type)
 INSERT INTO "nrc_code" ("id", "name") VALUES
 (1, 'KACHIN_STATE_TOWNSHIP_CODES'),
