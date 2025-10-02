@@ -1,4 +1,4 @@
-name: Set Matrix
+name: Build and Test Services
 
 on:
   push:
@@ -23,31 +23,31 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Ensure we checkout the correct ref for PRs
+          # Ensure checking out the correct ref for PRs
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       
       - name: Detect changed services
         id: set-matrix
+        shell: bash
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           echo " Detecting changed services..."
           
-          # Determine base commit for comparison
+          # task: Determine the base and head commits for comparison.
+          echo "==> Determining base commit for comparison..."
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            # For PRs, use merge-base for accurate diff
             git fetch origin ${{ github.base_ref }}
             BASE_REF=$(git merge-base origin/${{ github.base_ref }} HEAD)
             HEAD_REF="${{ github.event.pull_request.head.sha }}"
             echo " PR Mode: Comparing $BASE_REF...$HEAD_REF"
           else
-            # For push events, compare with previous commit
             BASE_REF="${{ github.event.before }}"
             HEAD_REF="${{ github.sha }}"
             
-            # Handle first push (before is all zeros) or empty base
             if [ "$BASE_REF" = "0000000000000000000000000000000000000000" ] || [ -z "$BASE_REF" ]; then
               echo "  First push or invalid base - comparing with HEAD~1"
               BASE_REF="HEAD~1"
-              # If HEAD~1 doesn't exist (initial commit), build all services
               if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
                 echo "  Initial commit detected - will build all services"
                 BASE_REF=""
@@ -56,68 +56,69 @@ jobs:
             echo " Push Mode: Comparing $BASE_REF...$HEAD_REF"
           fi
           
-          # Get changed files
+          # task: get the list of changed files
+          echo "==> Getting changed files..."
           if [ -z "$BASE_REF" ]; then
-            echo "  No base ref - building all services"
+            echo "  No base ref found, assuming all services need to be built."
             CHANGED_FILES=""
           else
             CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF 2>/dev/null || echo "")
           fi
-          
-          # Determine which services to build
+
+          # task: determine which services to build
+          echo "==> Determining which services to build..."
           if [ -z "$CHANGED_FILES" ]; then
             echo "  No changes detected or first commit - will build all services"
-            CHANGED_SERVICES=$(find services -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+            CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
           else
             echo " Changed files:"
             echo "$CHANGED_FILES"
             
-            # Extract unique service names from services/ directory
-            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^services/' | awk -F'/' '{print $2}' | sort -u || true)
-            
-            # Check if shared code changed - rebuild all if so
+            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
+
             if echo "$CHANGED_FILES" | grep -q '^shared/'; then
               echo " Shared code changed - will build all services"
-              CHANGED_SERVICES=$(find services -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
             fi
-            
-            # Check if workflow files changed - rebuild all for safety
+
             if echo "$CHANGED_FILES" | grep -q '^\.github/workflows/'; then
               echo " Workflow changed - will build all services"
-              CHANGED_SERVICES=$(find services -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
             fi
             
-            # Check if root-level dependency files changed (pom.xml, etc.)
             if echo "$CHANGED_FILES" | grep -qE '^(pom\.xml|build\.gradle|settings\.gradle|gradle\.properties)$'; then
               echo " Root dependency file changed - will build all services"
-              CHANGED_SERVICES=$(find services -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
             fi
           fi
-          
-          # Remove empty lines and filter out non-service directories
-          CHANGED_SERVICES=$(echo "$CHANGED_SERVICES" | grep -v '^$' | grep -vE '^(example-service|\..*|node_modules|target|build)$' || true)
-          
-          # Validate that services directory exists
-          if [ ! -d "services" ]; then
-            echo " Error: services directory not found"
+
+          # task: filter the list of services
+          echo "==> Filtering service list..."
+          CHANGED_SERVICES=$(echo "$CHANGED_SERVICES" | grep -v '^$' | grep -vE '^(example-service|infra|\..*|node_modules|target|build)$' || true)
+
+          # task: validate that the application directory exists
+          echo "==> Validating 'app' directory..."
+          if [ ! -d "app" ]; then
+            echo " Error: 'app' directory not found. Cannot determine services."
             echo "matrix=[]" >> $GITHUB_OUTPUT
             echo "has-changes=false" >> $GITHUB_OUTPUT
             exit 0
           fi
           
+          # Task: Set the final matrix output
+          echo "==> Setting job outputs..."
           if [ -z "$CHANGED_SERVICES" ]; then
-            echo "ℹ  No services to build"
+            echo "ℹ  No services to build."
             echo "matrix=[]" >> $GITHUB_OUTPUT
             echo "has-changes=false" >> $GITHUB_OUTPUT
           else
             echo " Services to build:"
             echo "$CHANGED_SERVICES"
             
-            # Convert to JSON array format with error handling
             MATRIX=$(echo "$CHANGED_SERVICES" | jq -R -s -c 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
             
             if [ "$MATRIX" = "[]" ] || [ -z "$MATRIX" ]; then
-              echo "  Matrix is empty after JSON conversion"
+              echo "  Matrix is empty after JSON conversion."
               echo "matrix=[]" >> $GITHUB_OUTPUT
               echo "has-changes=false" >> $GITHUB_OUTPUT
             else
@@ -126,6 +127,32 @@ jobs:
               echo " Matrix output: $MATRIX"
             fi
           fi
-        shell: bash
+
+  build:
+    needs: set-matrix
+    if: needs.set-matrix.outputs.has-changes == 'true'
+    permissions:
+      security-events: write
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    
+    uses: ./.github/workflows/maven-ci.yml
+    with:
+      service: ${{ matrix.service }}
+
+  lint:
+    name: Run Code Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Super-Linter
+        uses: github/super-linter@v5
         env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          VALIDATE_ALL_CODE_BASE: true
+          DEFAULT_BRANCH: dev
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
