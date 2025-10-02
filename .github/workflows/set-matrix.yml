@@ -94,7 +94,7 @@ jobs:
             fi
             
             # if root-level dependency management files have changed, we rebuild all services.
-            if echo "$CHANGED_FILES" | grep -qE '^(pom\.xml|build\.gradle|settings\.gradle|gradle\.properties)$'; then
+            if echo "$CHANGED_FILES" | grep -qE '^(pom\.xml|build\.gradle|settings\.gradle|gradle\.properties); then
               echo " Root dependency file changed - will build all services"
               CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
             fi
@@ -102,7 +102,7 @@ jobs:
 
           # task: filter the list of services to remove any non-buildable directories.
           echo "==> Filtering service list..."
-          CHANGED_SERVICES=$(echo "$CHANGED_SERVICES" | grep -v '^$' | grep -vE '^(example-service|infra|\..*|node_modules|target|build)$' || true)
+          CHANGED_SERVICES=$(echo "$CHANGED_SERVICES" | grep -v '^ | grep -vE '^(example-service|infra|\..*|node_modules|target|build) || true)
 
           # task: validate that the main application directory exists.
           echo "==> Validating 'app' directory..."
@@ -144,6 +144,8 @@ jobs:
   build:
     needs: set-matrix
     if: needs.set-matrix.outputs.has-changes == 'true'
+    permissions:
+      security-events: write
     strategy:
       matrix:
         service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
