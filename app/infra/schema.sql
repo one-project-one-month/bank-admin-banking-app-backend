@@ -95,13 +95,13 @@ CREATE TABLE "nrc_code_value" (
 );
 
 --create account type table
-CREATE TABLE IF NOT EXISTS "account_type" (
+CREATE TABLE IF NOT EXISTS account_type (
         id BIGSERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL
 );
 
 --Create table for storing transactions
-CREATE TABLE IF NOT EXISITS "transactions" (
+CREATE TABLE IF NOT EXISTS "transactions" (
         id BIGSERIAL PRIMARY KEY,
         account_type_id BIGINT NOT NULL,
         account_number VARCHAR(255) NOT NULL,
