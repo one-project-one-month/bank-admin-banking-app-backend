@@ -10,7 +10,7 @@ services:
 #      - "5432:5432"
 #    volumes:
 #      - postgres_data:/var/lib/postgresql/data
-#      - ./infra/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+#      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
 #    networks:
 #      - banknet
 
@@ -143,5 +143,5 @@ networks:
   banknet:
     driver: bridge
 
-#volumes:
-#  postgres_data:
+volumes:
+  postgres_data:

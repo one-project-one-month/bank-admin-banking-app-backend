@@ -6,8 +6,6 @@ import com.corporatebanking.transaction.transactions.repository.jdbc.Transaction
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -37,6 +35,10 @@ public class TransactionServiceImpl extends com.corporatebanking.transaction.grp
             responseObserver.onNext(response);
             responseObserver.onCompleted();
 
+        } catch (IllegalArgumentException e) {
+            responseObserver.onError(io.grpc.Status.INVALID_ARGUMENT
+                    .withDescription(e.getMessage())
+                    .asRuntimeException());
         } catch (Exception e) {
             responseObserver.onError(
                     Status.INTERNAL
@@ -47,6 +49,18 @@ public class TransactionServiceImpl extends com.corporatebanking.transaction.grp
     }
 
     private TransactionData toTransactionData(com.corporatebanking.transaction.grpc.CreateTransactionRequest request) {
+        if (request.getAmount() <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+
+        if (request.getAccountTypeId() <= 0) {
+            throw new IllegalArgumentException("Invalid account type");
+        }
+
+        if (request.getAccountNumber().isEmpty()) {
+            throw new IllegalArgumentException("Account number is required");
+        }
+
         LocalDate createdAt = request.getCreatedAt().isEmpty()
                 ? LocalDate.now()
                 : LocalDate.parse(request.getCreatedAt(), dateFormatter);
@@ -56,7 +70,7 @@ public class TransactionServiceImpl extends com.corporatebanking.transaction.grp
 
         AccountTypeData accountTypeData = new AccountTypeData(
                 request.getAccountTypeId(),
-                ""
+                "unknown"
         );
 
         return new TransactionData(
