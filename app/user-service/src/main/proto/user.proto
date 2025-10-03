@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package com.corporatebanking.userService;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.userService.grpc";
+option java_outer_classname = "UserServiceProto";
+
+service UserService {
+  rpc CreateUser (UserCreateRequest) returns (UserCreateResponse);
+  rpc GetAllUsers (GetAllUsersRequest) returns (GetAllUserResponse);
+}
+
+message UserCreateRequest {
+  string fullName = 1;
+  string dateOfBirth = 2;
+  int32 genderId = 3;
+  string email = 4;
+}
+
+message UserCreateResponse {
+  int64 id = 1;
+  string fullName = 2;
+  string dateOfBirth = 3;
+  int32 genderId = 4;
+  string email = 5;
+  string createdAt = 6;
+  string updatedAt = 7;
+  int64 createdBy = 8;
+  int64 updatedBy = 9;
+}
+
+message GetAllUsersRequest {
+}
+
+message GetAllUserResponse {
+  repeated UserCreateResponse users = 1;
+}
