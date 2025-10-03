@@ -8,17 +8,29 @@ option java_outer_classname = "FaqProto";
 
 service CreateFaqService{
     rpc CreateFaq(CreateFaqRequest) returns (CreateFaqResponse);
+    rpc CreateFaqCategory(CreateFaqCategoryRequest) returns (CreateFaqCategoryResponse);
+}
+
+message CreateFaqCategoryRequest{
+    string name = 1;
 }
 
 message CreateFaqRequest{
     string question = 1;
     string answer = 2;
+    int32 category_id = 3;
+}
+
+message CreateFaqCategoryResponse{
+    int32 id = 1;
+    string name = 2;
 }
 
 message CreateFaqResponse{
     int32 id = 1;
     string question = 2;
     string answer = 3;
-    int64 createdAt = 4;
-    int64 updatedAt = 5;
+    CreateFaqCategoryResponse createFaqCategoryResponse = 4;
+    int64 createdAt = 5;
+    int64 updatedAt = 6;
 }

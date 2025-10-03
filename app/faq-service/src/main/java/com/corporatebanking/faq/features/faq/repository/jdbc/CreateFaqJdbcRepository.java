@@ -6,5 +6,5 @@ import java.util.Optional;
 
 public interface CreateFaqJdbcRepository {
     public CreateFaqData save(CreateFaqData createFaqData);
-    public Optional<CreateFaqData> findById(Integer id);
+    public Optional<CreateFaqData> findById(int id);
 }
