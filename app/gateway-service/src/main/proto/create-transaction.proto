@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "com.corporatebanking.transaction";
-option java_outer_classname = "CreateTransactionProto";
-
 package com.corporatebanking.transaction;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.transaction.grpc";
+option java_outer_classname = "CreateTransactionProto";
 
 service CreateTransaction {
   rpc create (CreateTransactionRequest) returns (TransactionResponse);
@@ -16,12 +16,16 @@ message CreateTransactionRequest {
   string name            = 3;
   double amount          = 4;
   string note            = 5;
+  string created_at = 6;
+  string updated_at = 7;
 }
+
 
 message AccountTypeData {
   int64  id   = 1;
   string name = 2;
 }
+
 
 message TransactionResponse {
   int64 id                 = 1;

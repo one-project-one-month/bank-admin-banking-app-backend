@@ -5,5 +5,7 @@ public record CreateTransactionRequestDto(
         String accountNumber,
         String name,
         double amount,
-        String note
+        String note,
+        String createdAt,
+        String updatedAt
 ) {}

@@ -104,7 +104,7 @@ CREATE TABLE "account_type" (
 CREATE TABLE "transactions" (
         id BIGSERIAL PRIMARY KEY,
         account_type_id BIGINT NOT NULL,
-        account_number VARCHAR(255) NOT NULL UNIQUE,
+        account_number VARCHAR(255) NOT NULL,
         name VARCHAR(255) NOT NULL,
         amount DOUBLE PRECISION NOT NULL,
         note TEXT,
