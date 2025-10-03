@@ -204,4 +204,4 @@ INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 INSERT INTO "account_type" (name) VALUES
                                       ('Savings'),
                                       ('Special'),
-                                      ('Origanization');
+                                      ('Organization');

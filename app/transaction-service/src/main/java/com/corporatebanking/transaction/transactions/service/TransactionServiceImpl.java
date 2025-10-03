@@ -40,12 +40,13 @@ public class TransactionServiceImpl extends com.corporatebanking.transaction.grp
                     .setAccountType(
                             com.corporatebanking.transaction.grpc.AccountTypeData.newBuilder()
                                     .setId(saved.accountType() != null ? saved.accountType().id() : 0L)
-                                    .setName(saved.accountNumber() != null && saved.accountType().name() != null
+                                    .setName(saved.accountType() != null && saved.accountType().name() != null
                                             ? saved.accountType().name() : "")
                                     .build()
                     )
                     .setAccountNumber(saved.accountNumber())
                     .setName(saved.name())
+                    .setAmount(saved.amount())
                     .setNote(saved.note() == null ? "" : saved.note())
                     .setCreatedAt(saved.createdAt() != null ? dateTimeFormatter.format(saved.createdAt()) : "")
                     .setUpdatedAt(saved.updatedAt() != null ? dateTimeFormatter.format(saved.updatedAt()) : "")
