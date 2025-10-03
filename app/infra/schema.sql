@@ -69,6 +69,19 @@ INSERT INTO "role" ("role_type", "name") VALUES ('USER', 'Super ADMIN');
 -- Insert a default organization
 INSERT INTO "organization" ("name", "shortcode", "address", "country") VALUES ('OPOM Company', 'DEF', 'GitHub', 'Myanmar');
 
+DROP TABLE IF EXISTS "account_type" CASCADE;
+
+-- Create the table for account type options
+CREATE TABLE "account_type" (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+)
+
+INSERT INTO "account_type" ("id", "name") VALUES
+(1, "Savings account"),
+(2, "Joined account"),
+(3, "Individual account")
+
 DROP TABLE IF EXISTS "nrc_code_value" CASCADE;
 DROP TABLE IF EXISTS "nrc_code" CASCADE;
 
