@@ -3,5 +3,5 @@ package com.corporatebanking.transaction.transactions.repository.jdbc;
 import com.corporatebanking.transaction.transactions.models.TransactionData;
 
 public interface TransactionJdbcRepository {
-    public TransactionData save(TransactionData transactionData);
+    TransactionData save(TransactionData transactionData);
 }

@@ -8,11 +8,12 @@ import io.grpc.stub.StreamObserver;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 public class TransactionServiceImpl extends com.corporatebanking.transaction.grpc.CreateTransactionGrpc.CreateTransactionImplBase {
     private final TransactionJdbcRepository transactionJdbcRepository;
-    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
+    private final DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
 
     public TransactionServiceImpl(TransactionJdbcRepository transactionJdbcRepository) {
         this.transactionJdbcRepository = transactionJdbcRepository;
@@ -22,51 +23,66 @@ public class TransactionServiceImpl extends com.corporatebanking.transaction.grp
     public void create(com.corporatebanking.transaction.grpc.CreateTransactionRequest request,
                                   StreamObserver<com.corporatebanking.transaction.grpc.TransactionResponse> responseObserver) {
         try {
-            TransactionData toSave = new TransactionData(
-                    null,
-                    new AccountTypeData(request.getAccountTypeId(), null),
-                    request.getAccountNumber(),
-                    request.getName(),
-                    request.getAmount(),
-                    request.getNote(),
-                    null,
-                    null
-            );
 
-            TransactionData saved = transactionJdbcRepository.save(toSave);
+            TransactionData transactionData = toTransactionData(request);
 
-            com.corporatebanking.transaction.grpc.TransactionResponse response = com.corporatebanking.transaction.grpc.TransactionResponse.newBuilder()
-                    .setId(saved.id())
-                    .setAccountType(
-                            com.corporatebanking.transaction.grpc.AccountTypeData.newBuilder()
-                                    .setId(saved.accountType() != null ? saved.accountType().id() : 0L)
-                                    .setName(saved.accountType() != null && saved.accountType().name() != null
-                                            ? saved.accountType().name() : "")
-                                    .build()
-                    )
-                    .setAccountNumber(saved.accountNumber())
-                    .setName(saved.name())
-                    .setAmount(saved.amount())
-                    .setNote(saved.note() == null ? "" : saved.note())
-                    .setCreatedAt(saved.createdAt() != null ? dateTimeFormatter.format(saved.createdAt()) : "")
-                    .setUpdatedAt(saved.updatedAt() != null ? dateTimeFormatter.format(saved.updatedAt()) : "")
-                    .build();
+            TransactionData savedTransaction = transactionJdbcRepository.save(transactionData);
+
+            com.corporatebanking.transaction.grpc.TransactionResponse response = toTransactionResponse(savedTransaction);
 
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-        } catch (DuplicateKeyException e) {
-            responseObserver.onError(Status.ALREADY_EXISTS
-                    .withDescription("Account number already exists: " + e.getMostSpecificCause().getMessage())
-                    .asRuntimeException());
-        } catch (DataIntegrityViolationException e) {
-            responseObserver.onError(Status.INVALID_ARGUMENT
-                    .withDescription("Invalid transaction data: " + e.getMostSpecificCause().getMessage())
-                    .asRuntimeException());
+
         } catch (Exception e) {
-            responseObserver.onError(Status.INTERNAL
-                    .withDescription("Failed to create transaction")
-                    .withCause(e)
-                    .asRuntimeException());
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Fail to create transaction: " + e.getMessage())
+                            .asRuntimeException()
+            );
         }
     }
+
+    private TransactionData toTransactionData(com.corporatebanking.transaction.grpc.CreateTransactionRequest request) {
+        LocalDate createdAt = request.getCreatedAt().isEmpty()
+                ? LocalDate.now()
+                : LocalDate.parse(request.getCreatedAt(), dateFormatter);
+        LocalDate updateAt = request.getUpdatedAt().isEmpty()
+                ? LocalDate.now()
+                : LocalDate.parse(request.getUpdatedAt(), dateFormatter);
+
+        AccountTypeData accountTypeData = new AccountTypeData(
+                request.getAccountTypeId(),
+                ""
+        );
+
+        return new TransactionData(
+                null,
+                accountTypeData,
+                request.getAccountNumber(),
+                request.getName(),
+                request.getAmount(),
+                request.getNote(),
+                createdAt,
+                updateAt
+        );
+    }
+
+    private com.corporatebanking.transaction.grpc.TransactionResponse toTransactionResponse(TransactionData transactionData) {
+        com.corporatebanking.transaction.grpc.AccountTypeData accountType = com.corporatebanking.transaction.grpc.AccountTypeData.newBuilder()
+                .setId(transactionData.accountType().id())
+                .setName(transactionData.accountType().name())
+                .build();
+
+        return com.corporatebanking.transaction.grpc.TransactionResponse.newBuilder()
+                .setId(transactionData.id())
+                .setAccountType(accountType)
+                .setAccountNumber(transactionData.accountNumber())
+                .setName(transactionData.name())
+                .setAmount(transactionData.amount())
+                .setNote(transactionData.note())
+                .setCreatedAt(transactionData.createdAt().format(dateFormatter))
+                .setUpdatedAt(transactionData.createdAt().format(dateFormatter))
+                .build();
+    }
+
 }

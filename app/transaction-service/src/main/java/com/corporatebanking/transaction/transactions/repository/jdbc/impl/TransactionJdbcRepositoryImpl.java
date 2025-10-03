@@ -3,7 +3,6 @@ package com.corporatebanking.transaction.transactions.repository.jdbc.impl;
 import com.corporatebanking.transaction.transactions.models.AccountTypeData;
 import com.corporatebanking.transaction.transactions.models.TransactionData;
 import com.corporatebanking.transaction.transactions.repository.jdbc.TransactionJdbcRepository;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
-import java.time.LocalDate;
+import java.sql.Statement;
 
 @Repository
 public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository {
@@ -23,11 +22,10 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository 
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public final RowMapper<TransactionData> transactionRowMapper = (rs, rowNum) ->{
-
+    private final RowMapper<TransactionData> transactionRowMapper = (rs, rowNum) -> {
         AccountTypeData accountTypeData = null;
         Long accountTypeId = rs.getObject("at_id", Long.class);
-        if(accountTypeId != null) {
+        if (accountTypeId != null) {
             accountTypeData = new AccountTypeData(
                     accountTypeId,
                     rs.getString("at_name")
@@ -46,58 +44,40 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository 
         );
     };
 
+
     @Override
     public TransactionData save(TransactionData transactionData) {
-        final String sql = """
-                INSERT INTO transactions 
-                    (account_type_id,
-                    account_number,
-                    name,
-                    amount,
-                    note,
-                    created_at,
-                    updated_at)
-                VALUES
-                    (?, ?, ?, ?, ?, ?, ?)
-                """;
-
-        LocalDate created = transactionData.createdAt() != null ? transactionData.createdAt() : LocalDate.now();
-        LocalDate updated = transactionData.updatedAt() != null ? transactionData.updatedAt() : created;
-
-        Long newId;
-        try {
-            newId = jdbcTemplate.queryForObject(
-                    sql,
-                    Long.class,
-                    transactionData.accountType() != null ? transactionData.accountType().id(): null,
-                    transactionData.accountNumber(),
-                    transactionData.name(),
-                    transactionData.amount(),
-                    transactionData.note(),
-                    Date.valueOf(created),
-                    Date.valueOf(updated)
-            );
-        }catch (DuplicateKeyException e) {
-            throw e;
-        }
-
-        final String selectSql = """
-            SELECT
-                t.id                AS t_id,
-                t.account_type_id   AS t_account_type_id,
-                t.account_number    AS t_account_number,
-                t.name              AS t_name,
-                t.amount            AS t_amount,
-                t.note              AS t_note,
-                t.created_at        AS t_created_at,
-                t.updated_at        AS t_updated_at,
-                at.id               AS at_id,
-                at.name             AS at_name
-            FROM transactions t
-            LEFT JOIN account_type at ON at.id = t.account_type_id
-            WHERE t.id = ?
+        String sql = """
+            INSERT INTO transactions (account_type_id, account_number, name, amount, note, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """;
 
-        return jdbcTemplate.queryForObject(selectSql, transactionRowMapper, newId);
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, transactionData.accountType().id());
+            ps.setString(2, transactionData.accountNumber());
+            ps.setString(3, transactionData.name());
+            ps.setDouble(4, transactionData.amount());
+            ps.setString(5, transactionData.note());
+            ps.setDate(6, Date.valueOf(transactionData.createdAt()));
+            ps.setDate(7, Date.valueOf(transactionData.updatedAt()));
+            return ps;
+        }, keyHolder);
+
+        Long generatedId = keyHolder.getKey() != null ? keyHolder.getKey().longValue() : null;
+
+        return new TransactionData(
+                generatedId,
+                transactionData.accountType(),
+                transactionData.accountNumber(),
+                transactionData.name(),
+                transactionData.amount(),
+                transactionData.note(),
+                transactionData.createdAt(),
+                transactionData.updatedAt()
+        );
     }
+
 }
