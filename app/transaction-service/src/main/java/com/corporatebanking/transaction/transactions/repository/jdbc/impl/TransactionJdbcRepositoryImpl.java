@@ -41,33 +41,35 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository 
 
     @Override
     public TransactionData save(TransactionData transactionData) {
-        String sql = """
+        String insertSql = """
         INSERT INTO transactions (account_type_id, account_number, name, amount, note, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE)
         RETURNING id
         """;
 
-        try {
-            Long generatedId = jdbcTemplate.queryForObject(sql, Long.class,
-                    transactionData.accountType().id(),
-                    transactionData.accountNumber(),
-                    transactionData.name(),
-                    transactionData.amount(),
-                    transactionData.note());
+        Long generatedId = jdbcTemplate.queryForObject(insertSql, Long.class,
+                transactionData.accountType().id(),
+                transactionData.accountNumber(),
+                transactionData.name(),
+                transactionData.amount(),
+                transactionData.note());
 
-            return new TransactionData(
-                    generatedId,
-                    transactionData.accountType(),
-                    transactionData.accountNumber(),
-                    transactionData.name(),
-                    transactionData.amount(),
-                    transactionData.note(),
-                    java.time.LocalDate.now(),
-                    java.time.LocalDate.now()
-            );
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("SQL Error: " + e.getMessage(), e);
-        }
+        String selectSql = """
+        SELECT 
+            t.id AS t_id,
+            t.account_number AS t_account_number,
+            t.name AS t_name,
+            t.amount AS t_amount,
+            t.note AS t_note,
+            t.created_at AS t_created_at,
+            t.updated_at AS t_updated_at,
+            at.id AS at_id,
+            at.name AS at_name
+        FROM transactions t
+        LEFT JOIN account_type at ON at.id = t.account_type_id
+        WHERE t.id = ?
+        """;
+
+        return jdbcTemplate.queryForObject(selectSql, transactionRowMapper, generatedId);
     }
 }
