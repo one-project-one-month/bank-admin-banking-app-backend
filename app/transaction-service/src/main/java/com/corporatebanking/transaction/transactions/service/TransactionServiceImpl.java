@@ -5,12 +5,16 @@ import com.corporatebanking.transaction.transactions.models.TransactionData;
 import com.corporatebanking.transaction.transactions.repository.jdbc.TransactionJdbcRepository;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+@Service
+@GrpcService
 public class TransactionServiceImpl extends com.corporatebanking.transaction.grpc.CreateTransactionGrpc.CreateTransactionImplBase {
     private final TransactionJdbcRepository transactionJdbcRepository;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;

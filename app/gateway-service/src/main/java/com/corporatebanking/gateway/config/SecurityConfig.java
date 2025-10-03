@@ -34,10 +34,10 @@ public class SecurityConfig {
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/auth/login", "/api/v1/transaction/**")
+                .securityMatcher("/auth/login", "/api/v1/transactions/**")
                 .addFilterBefore(requestLoggingFilter, AuthorizationFilter.class)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/v1/transaction/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/transactions/**").permitAll()
                         .anyRequest().permitAll()
                 );
         return http.build();

@@ -5,13 +5,7 @@ import com.corporatebanking.transaction.transactions.models.TransactionData;
 import com.corporatebanking.transaction.transactions.repository.jdbc.TransactionJdbcRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
 
 @Repository
 public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository {
@@ -48,36 +42,32 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository 
     @Override
     public TransactionData save(TransactionData transactionData) {
         String sql = """
-            INSERT INTO transactions (account_type_id, account_number, name, amount, note, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """;
+        INSERT INTO transactions (account_type_id, account_number, name, amount, note, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE)
+        RETURNING id
+        """;
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        try {
+            Long generatedId = jdbcTemplate.queryForObject(sql, Long.class,
+                    transactionData.accountType().id(),
+                    transactionData.accountNumber(),
+                    transactionData.name(),
+                    transactionData.amount(),
+                    transactionData.note());
 
-        jdbcTemplate.update(connection -> {
-            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            ps.setLong(1, transactionData.accountType().id());
-            ps.setString(2, transactionData.accountNumber());
-            ps.setString(3, transactionData.name());
-            ps.setDouble(4, transactionData.amount());
-            ps.setString(5, transactionData.note());
-            ps.setDate(6, Date.valueOf(transactionData.createdAt()));
-            ps.setDate(7, Date.valueOf(transactionData.updatedAt()));
-            return ps;
-        }, keyHolder);
-
-        Long generatedId = keyHolder.getKey() != null ? keyHolder.getKey().longValue() : null;
-
-        return new TransactionData(
-                generatedId,
-                transactionData.accountType(),
-                transactionData.accountNumber(),
-                transactionData.name(),
-                transactionData.amount(),
-                transactionData.note(),
-                transactionData.createdAt(),
-                transactionData.updatedAt()
-        );
+            return new TransactionData(
+                    generatedId,
+                    transactionData.accountType(),
+                    transactionData.accountNumber(),
+                    transactionData.name(),
+                    transactionData.amount(),
+                    transactionData.note(),
+                    java.time.LocalDate.now(),
+                    java.time.LocalDate.now()
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("SQL Error: " + e.getMessage(), e);
+        }
     }
-
 }

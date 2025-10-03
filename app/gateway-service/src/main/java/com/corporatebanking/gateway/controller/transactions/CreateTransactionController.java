@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/transactoins")
+@RequestMapping("/api/v1/transactions")
 public class CreateTransactionController {
 
     @GrpcClient("transaction-service")
