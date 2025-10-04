@@ -21,7 +21,7 @@ public class AuthResource {
     AuthService authService;
 
     @POST
-    @Path("/login")
+    @Path("/logifafaafan")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response login(LoginRequest loginRequest) {
