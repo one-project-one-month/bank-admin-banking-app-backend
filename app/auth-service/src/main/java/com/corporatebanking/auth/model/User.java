@@ -15,4 +15,5 @@ public class    User {
     public String email;
     public String role;
     public Boolean isActive;
+    public String fullName;
 }
