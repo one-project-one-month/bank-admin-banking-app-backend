@@ -73,7 +73,9 @@ jobs:
       
       - name: Save matrix to file
         if: steps.set-matrix.outputs.has-changes == 'true'
-        run: echo '${{ steps.set-matrix.outputs.matrix }}' > matrix.json
+        run: |
+          echo '${{ steps.set-matrix.outputs.matrix }}' | jq -c '.' > matrix.json
+          cat matrix.json
 
       - name: Upload matrix artifact
         if: steps.set-matrix.outputs.has-changes == 'true'
