@@ -45,7 +45,9 @@ jobs:
       - name: Set output for next job
         id: set-output
         run: |
-          echo "matrix=${{ steps.matrix.outputs.matrix }}" >> $GITHUB_OUTPUT
+          echo "matrix<<EOF" >> $GITHUB_OUTPUT
+          echo "${{ steps.matrix.outputs.matrix }}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           echo "has-changes=${{ steps.matrix.outputs.has-changes }}" >> $GITHUB_OUTPUT
 
     outputs:
