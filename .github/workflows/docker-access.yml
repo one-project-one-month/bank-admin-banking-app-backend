@@ -34,7 +34,6 @@ jobs:
         run: |
           MATRIX='${{ steps.matrix.outputs.matrix }}'
           if [ -z "$MATRIX" ] || [ "$MATRIX" = "[]" ]; then
-            echo "Matrix is empty, no services to build."
             exit 0
           fi
           for service in $(echo "$MATRIX" | jq -r '.[]'); do
@@ -49,13 +48,11 @@ jobs:
         run: |
           MATRIX='${{ steps.matrix.outputs.matrix }}'
           if [ -z "$MATRIX" ] || [ "$MATRIX" = "[]" ]; then
-            echo "Matrix is empty, no services to start."
             exit 0
           fi
 
           docker network create banknet
 
-          # Always start kafka as it is a central dependency
           docker run -d --name kafka --network banknet -p 9092:9092 \
             -e KAFKA_NODE_ID=1 \
             -e KAFKA_PROCESS_ROLES=broker,controller \
@@ -68,7 +65,6 @@ jobs:
             apache/kafka:4.0.1-rc2
 
           for service in $(echo "$MATRIX" | jq -r '.[]'); do
-            echo "Starting $service"
             case $service in
               "transaction-service")
                 docker run -d --name transaction-service --network banknet -p 1001:1001 -p 9095:9095 transaction-service:latest
@@ -101,13 +97,8 @@ jobs:
         run: |
           #!/bin/bash
           set -e
-          
-          # This step might need adjustment if not all services are started
-          # For now, it will try to check the health of a fixed set of services.
-
           TIMEOUT=180
           INTERVAL=5
-          
           declare -A SERVICES
           SERVICES=(
             ["gateway-service"]="http://localhost:8080/health"
@@ -115,60 +106,43 @@ jobs:
             ["user-service"]="http://localhost:3001/health"
             ["transaction-service"]="http://localhost:1001/health"
           )
-          
-          # Check only the services that were started
           MATRIX='${{ steps.matrix.outputs.matrix }}'
           STARTED_SERVICES=$(echo "$MATRIX" | jq -r '.[]')
-
           declare -A healthy_services
           for service in "${!SERVICES[@]}"; do
             if [[ " $STARTED_SERVICES " =~ " $service " ]]; then
               healthy_services[$service]=0
             else
-              healthy_services[$service]=1 # Mark as healthy if not started
+              healthy_services[$service]=1
             fi
           done
-          
           start_time=$(date +%s)
-          
           while true; do
             all_healthy=1
             for service in "${!SERVICES[@]}"; do
               url=${SERVICES[$service]}
               if [ ${healthy_services[$service]} -eq 0 ]; then
-                echo "Checking health of $service at $url..."
                 status_code=$(curl -s -o /dev/null -w "%{{http_code}}" "$url" || echo "000")
-                
                 if [ "$status_code" -eq 200 ]; then
-                  echo "$service is healthy!"
                   healthy_services[$service]=1
                 else
                   all_healthy=0
                 fi
               fi
             done
-            
             if [ $all_healthy -eq 1 ]; then
-              echo "All services are healthy!"
               exit 0
             fi
-            
             current_time=$(date +%s)
             elapsed_time=$((current_time - start_time))
-            
             if [ $elapsed_time -ge $TIMEOUT ]; then
-              echo "Timeout reached. Not all services are healthy."
               exit 1
             fi
-            
             sleep $INTERVAL
           done
 
       - name: Run Integration Test Suite
         run: |
-          echo "****************************************************************"
-          echo "* TODO: Add your integration test command here.                *"
-          echo "****************************************************************"
           exit 1
 
       - name: Show Docker Logs on Failure
