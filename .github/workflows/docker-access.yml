@@ -45,6 +45,10 @@ jobs:
           done
       
       - name: Start Changed Services
+        env:
+          CORPORATE_DB_URL: ${{ secrets.CORPORATE_DB_URL }}
+          CORPORATE_DB_USERNAME: ${{ secrets.CORPORATE_DB_USERNAME }}
+          CORPORATE_DB_PASSWORD: ${{ secrets.CORPORATE_DB_PASSWORD }}
         run: |
           MATRIX='${{ steps.matrix.outputs.matrix }}'
           if [ -z "$MATRIX" ] || [ "$MATRIX" = "[]" ]; then
@@ -85,7 +89,11 @@ jobs:
                 docker run -d --name upload-service --network banknet -p 8001:8000 upload-service:latest
                 ;; 
               "auth-service")
-                docker run -d --name auth-service --network banknet -p 9999:9999 auth-service:latest
+                docker run -d --name auth-service --network banknet -p 9999:9999 \
+                  -e DB_URL=$CORPORATE_DB_URL \
+                  -e DB_USERNAME=$CORPORATE_DB_USERNAME \
+                  -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
+                  auth-service:latest
                 ;; 
               "gateway-service")
                 docker run -d --name gateway-service --network banknet -p 8080:8080 gateway-service:latest
