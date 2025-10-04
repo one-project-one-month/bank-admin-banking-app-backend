@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package com.corporatebanking.faq;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.faq.grpc";
+option java_outer_classname = "FaqProto";
+
+service UpdateFaqService {
+  rpc UpdateFaq(UpdateFaqRequest) returns (UpdateFaqResponse);
+}
+
+message UpdateFaqRequest {
+  string question = 1;
+  string answer = 2;
+}
+
+message UpdateFaqResponse {
+  string question = 1;
+  string answer = 2;
+  int64 createdAt = 3;
+  int64 updatedAt = 4;
+}
