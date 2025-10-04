@@ -1,4 +1,4 @@
-name: Build and Test Services
+name: Checking Out Changed Services
 
 on:
   push:
@@ -9,7 +9,6 @@ on:
     branches:
       - dev
       - ft/**
-
 
 jobs:
   set-matrix:
@@ -23,7 +22,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Ensure checking out the correct ref for PRs
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       
       - name: Detect changed services
@@ -52,7 +50,7 @@ jobs:
             CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF 2>/dev/null || echo "")
           fi
           if [ -z "$CHANGED_FILES" ]; then
-            CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \\;) 
+            CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
           else
             CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
             if echo "$CHANGED_FILES" | grep -q '^shared/'; then
@@ -97,18 +95,65 @@ jobs:
           path: matrix.json
           retention-days: 1
 
-  lint:
-    name: Run Code Linter
+  build:
+    needs: set-matrix
+    if: needs.set-matrix.outputs.has-changes == 'true'
+    permissions:
+      security-events: write
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    
+    uses: ./.github/workflows/maven-ci.yml
+    with:
+      service: ${{ matrix.service }}
+    secrets: inherit
+
+  push-images:
+    needs: [set-matrix, build]
+    if: needs.set-matrix.outputs.has-changes == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Run Super-Linter
-        uses: github/super-linter@v6
-        env:
-          VALIDATE_ALL_CODE_BASE: true
-          DEFAULT_BRANCH: dev
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./app/${{ matrix.service }}
+          file: ./app/${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
