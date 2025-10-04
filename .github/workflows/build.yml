@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     outputs:
-      matrix: ${{ steps.set-output.outputs.matrix }}
-      has-changes: ${{ steps.set-output.outputs.has-changes }}
+      matrix: ${{ steps.read-matrix.outputs.matrix }}
+      has-changes: ${{ steps.read-matrix.outputs.has-changes }}
     
     steps:
       - name: Checkout code
@@ -27,26 +27,22 @@ jobs:
         continue-on-error: true
       
       - name: Read matrix from file
-        id: matrix
+        id: read-matrix
         run: |
           if [ -f "matrix.json" ]; then
             MATRIX_CONTENT=$(cat matrix.json)
+            echo "Matrix content: $MATRIX_CONTENT"
             echo "matrix=$MATRIX_CONTENT" >> $GITHUB_OUTPUT
             echo "has-changes=true" >> $GITHUB_OUTPUT
           else
+            echo "No matrix.json found"
             echo "matrix=[]" >> $GITHUB_OUTPUT
             echo "has-changes=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Exit if no changes
-        if: steps.matrix.outputs.has-changes == 'false'
+        if: steps.read-matrix.outputs.has-changes == 'false'
         run: exit 0
-
-      - name: Set output for next job
-        id: set-output
-        run: |
-          echo "matrix=${{ steps.matrix.outputs.matrix }}" >> $GITHUB_OUTPUT
-          echo "has-changes=${{ steps.matrix.outputs.has-changes }}" >> $GITHUB_OUTPUT
 
   maven-build:
     needs: build

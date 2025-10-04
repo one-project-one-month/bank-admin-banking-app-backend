@@ -1,4 +1,4 @@
-name: Build and Test Services
+name: Chnage Dectection
 
 on:
   push:
