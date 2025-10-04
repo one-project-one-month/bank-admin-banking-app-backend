@@ -52,7 +52,7 @@ jobs:
             CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF 2>/dev/null || echo "")
           fi
           if [ -z "$CHANGED_FILES" ]; then
-            CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \\;)
+            CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \\;) 
           else
             CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
             if echo "$CHANGED_FILES" | grep -q '^shared/'; then
@@ -96,19 +96,6 @@ jobs:
           name: matrix-artifact
           path: matrix.json
           retention-days: 1
-
-  build:
-    needs: set-matrix
-    if: needs.set-matrix.outputs.has-changes == 'true'
-    permissions:
-      security-events: write
-    strategy:
-      matrix:
-        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
-    
-    uses: ./.github/workflows/maven-ci.yml
-    with:
-      service: ${{ matrix.service }}
 
   lint:
     name: Run Code Linter
