@@ -178,3 +178,30 @@ INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 (16, '1'),(16, '2'),(16, '3'),(16, '4'),(16, '5'),(16, '6'),(16, '7'),
 (16, '8'),(16, '9'),(16, '10'),(16, '11'),(16, '12'),(16, '13'),(16, '14');
+
+
+-- FAQ
+CREATE TABLE IF NOT EXISTS faq_category(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL default now(),
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS faq(
+    id SERIAL PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    faq_category_id INT REFERENCES FAQ_Category(id) ON DELETE SET NULL,
+    created_at TIMESTAMP NOT NULL default now(),
+    updated_at TIMESTAMP
+);
+
+
+INSERT INTO faq_category (name)
+VALUES
+    ('General Questions'),
+    ('Account & Billing'),
+    ('Technical Support'),
+    ('Privacy & Security');
+-----
