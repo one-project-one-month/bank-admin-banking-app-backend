@@ -1,0 +1,58 @@
+name: Build Services
+
+on:
+  workflow_run:
+    workflows: ["Build and Test Services"]
+    types:
+      - completed
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      matrix: ${{ steps.read-matrix.outputs.matrix }}
+      has-changes: ${{ steps.read-matrix.outputs.has-changes }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download matrix artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: matrix-artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+        continue-on-error: true
+      
+      - name: Read matrix from file
+        id: read-matrix
+        run: |
+          if [ -f "matrix.json" ]; then
+            MATRIX_CONTENT=$(cat matrix.json)
+            echo "Matrix content: $MATRIX_CONTENT"
+            echo "matrix=$MATRIX_CONTENT" >> $GITHUB_OUTPUT
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No matrix.json found"
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Exit if no changes
+        if: steps.read-matrix.outputs.has-changes == 'false'
+        run: exit 0
+
+  maven-build:
+    needs: build
+    if: needs.build.outputs.has-changes == 'true'
+    permissions:
+      security-events: write
+      contents: read
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.build.outputs.matrix) }}
+    uses: ./.github/workflows/maven-ci.yml
+    with:
+      service: ${{ matrix.service }}
