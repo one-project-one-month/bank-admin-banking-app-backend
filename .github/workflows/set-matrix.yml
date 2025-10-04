@@ -23,34 +23,29 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      
+
       - name: Detect changed services
         id: set-matrix
-        shell: bash
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
             git fetch origin ${{ github.base_ref }} --quiet
             BASE_REF=$(git merge-base origin/${{ github.base_ref }} HEAD)
             HEAD_REF="${{ github.event.pull_request.head.sha }}"
           else
             BASE_REF="${{ github.event.before }}"
             HEAD_REF="${{ github.sha }}"
-            if [ "$BASE_REF" = "0000000000000000000000000000000000000000" ] || [ -z "$BASE_REF" ]; then
-              BASE_REF="HEAD~1"
-              if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
-                BASE_REF=""
-              fi
+
+            if [ -z "$BASE_REF" ] || [ "$BASE_REF" = "0000000000000000000000000000000000000000" ]; then
+              BASE_REF=$(git rev-parse HEAD^ || echo "")
             fi
           fi
-          
+
           if [ -z "$BASE_REF" ]; then
-            CHANGED_FILES=""
+            CHANGED_FILES=$(git show --name-only --pretty="" $HEAD_REF)
           else
-            CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF 2>/dev/null || echo "")
+            CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF)
           fi
-          
+
           if [ -z "$CHANGED_FILES" ]; then
             CHANGED_SERVICES=""
           else
@@ -66,27 +61,15 @@ jobs:
             fi
           fi
           
-          CHANGED_SERVICES=$(echo "$CHANGED_SERVICES" | grep -v '^$' | grep -vE '^(example-service|infra|..*|node_modules|target|build)$' || true)
-          
-          if [ ! -d "app" ]; then
-            echo "matrix=[]" >> $GITHUB_OUTPUT
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
           if [ -z "$CHANGED_SERVICES" ]; then
             echo "matrix=[]" >> $GITHUB_OUTPUT
             echo "has-changes=false" >> $GITHUB_OUTPUT
           else
-            MATRIX=$(echo "$CHANGED_SERVICES" | jq -R -s -c 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-            if [ "$MATRIX" = "[]" ] || [ -z "$MATRIX" ]; then
-              echo "matrix=[]" >> $GITHUB_OUTPUT
-              echo "has-changes=false" >> $GITHUB_OUTPUT
-            else
-              echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-              echo "has-changes=true" >> $GITHUB_OUTPUT
-            fi
+            MATRIX=$(echo "$CHANGED_SERVICES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+            echo "has-changes=true" >> $GITHUB_OUTPUT
           fi
+
       
       - name: Save matrix to file
         if: steps.set-matrix.outputs.has-changes == 'true'
