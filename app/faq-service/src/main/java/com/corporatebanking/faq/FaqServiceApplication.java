@@ -7,5 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class FaqServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(FaqServiceApplication.class, args);
+        System.out.println("FAQ Service is running...");
     }
 }
