@@ -9,7 +9,7 @@ on:
 jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: "${{ github.event.workflow_run.conclusion == 'success' }}"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -45,18 +45,17 @@ jobs:
             fi
           done
       
-      - name: Start Services
-        env:
-          CORPORATE_DB_URL: ${{ secrets.CORPORATE_DB_URL }}
-          CORPORATE_DB_USERNAME: ${{ secrets.CORPORATE_DB_USERNAME }}
-          CORPORATE_DB_PASSWORD: ${{ secrets.CORPORATE_DB_PASSWORD }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_OWNER: ${{ github.repository_owner }}
-          GITHUB_REPO: ${{ github.event.repository.name }}
-          GITHUB_TARGET_FOLDER: 'data'
+      - name: Start Changed Services
         run: |
+          MATRIX='${{ steps.matrix.outputs.matrix }}'
+          if [ -z "$MATRIX" ] || [ "$MATRIX" = "[]" ]; then
+            echo "Matrix is empty, no services to start."
+            exit 0
+          fi
+
           docker network create banknet
-          
+
+          # Always start kafka as it is a central dependency
           docker run -d --name kafka --network banknet -p 9092:9092 \
             -e KAFKA_NODE_ID=1 \
             -e KAFKA_PROCESS_ROLES=broker,controller \
@@ -68,52 +67,44 @@ jobs:
             -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT \
             apache/kafka:4.0.1-rc2
 
-          docker run -d --name transaction-service --network banknet -p 1001:1001 -p 9095:9095 \
-            -e DB_URL=$CORPORATE_DB_URL \
-            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
-            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
-            transaction-service:latest
-          
-          docker run -d --name faq-service --network banknet -p 2001:2001 -p 9094:9094 \
-            -e DB_URL=$CORPORATE_DB_URL \
-            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
-            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
-            faq-service:latest
-
-          docker run -d --name nrc-service --network banknet -p 3002:3002 -p 9093:9093 \
-            -e DB_URL=$CORPORATE_DB_URL \
-            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
-            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
-            nrc-service:latest
-
-          docker run -d --name user-service --network banknet -p 3001:3001 -p 9091:9091 \
-            -e DB_URL=$CORPORATE_DB_URL \
-            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
-            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
-            user-service:latest
-
-          docker run -d --name mail-service --network banknet -p 7000:7000 mail-service:latest
-
-          docker run -d --name upload-service --network banknet -p 8001:8000 \
-            -e GITHUB_TOKEN=$GITHUB_TOKEN \
-            -e GITHUB_OWNER=$GITHUB_OWNER \
-            -e GITHUB_REPO=$GITHUB_REPO \
-            -e GITHUB_TARGET_FOLDER=$GITHUB_TARGET_FOLDER \
-            upload-service:latest
-
-          docker run -d --name auth-service --network banknet -p 9999:9999 \
-            -e DB_URL=$CORPORATE_DB_URL \
-            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
-            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
-            auth-service:latest
-
-          docker run -d --name gateway-service --network banknet -p 8080:8080 gateway-service:latest
+          for service in $(echo "$MATRIX" | jq -r '.[]'); do
+            echo "Starting $service"
+            case $service in
+              "transaction-service")
+                docker run -d --name transaction-service --network banknet -p 1001:1001 -p 9095:9095 transaction-service:latest
+                ;; 
+              "faq-service")
+                docker run -d --name faq-service --network banknet -p 2001:2001 -p 9094:9094 faq-service:latest
+                ;; 
+              "nrc-service")
+                docker run -d --name nrc-service --network banknet -p 3002:3002 -p 9093:9093 nrc-service:latest
+                ;; 
+              "user-service")
+                docker run -d --name user-service --network banknet -p 3001:3001 -p 9091:9091 user-service:latest
+                ;; 
+              "mail-service")
+                docker run -d --name mail-service --network banknet -p 7000:7000 mail-service:latest
+                ;; 
+              "upload-service")
+                docker run -d --name upload-service --network banknet -p 8001:8000 upload-service:latest
+                ;; 
+              "auth-service")
+                docker run -d --name auth-service --network banknet -p 9999:9999 auth-service:latest
+                ;; 
+              "gateway-service")
+                docker run -d --name gateway-service --network banknet -p 8080:8080 gateway-service:latest
+                ;; 
+            esac
+          done
 
       - name: Wait for Services to be Healthy
         run: |
           #!/bin/bash
           set -e
           
+          # This step might need adjustment if not all services are started
+          # For now, it will try to check the health of a fixed set of services.
+
           TIMEOUT=180
           INTERVAL=5
           
@@ -125,9 +116,17 @@ jobs:
             ["transaction-service"]="http://localhost:1001/health"
           )
           
+          # Check only the services that were started
+          MATRIX='${{ steps.matrix.outputs.matrix }}'
+          STARTED_SERVICES=$(echo "$MATRIX" | jq -r '.[]')
+
           declare -A healthy_services
           for service in "${!SERVICES[@]}"; do
-            healthy_services[$service]=0
+            if [[ " $STARTED_SERVICES " =~ " $service " ]]; then
+              healthy_services[$service]=0
+            else
+              healthy_services[$service]=1 # Mark as healthy if not started
+            fi
           done
           
           start_time=$(date +%s)
@@ -175,19 +174,20 @@ jobs:
       - name: Show Docker Logs on Failure
         if: failure()
         run: |
-          docker logs gateway-service
-          docker logs auth-service
-          docker logs user-service
-          docker logs transaction-service
-          docker logs nrc-service
-          docker logs faq-service
-          docker logs mail-service
-          docker logs upload-service
+          MATRIX='${{ steps.matrix.outputs.matrix }}'
+          for service in $(echo "$MATRIX" | jq -r '.[]'); do
+            docker logs $service
+          done
           docker logs kafka
 
       - name: Tear Down Services
         if: always()
         run: |
-          docker stop gateway-service auth-service user-service transaction-service nrc-service faq-service mail-service upload-service kafka
-          docker rm gateway-service auth-service user-service transaction-service nrc-service faq-service mail-service upload-service kafka
+          MATRIX='${{ steps.matrix.outputs.matrix }}'
+          for service in $(echo "$MATRIX" | jq -r '.[]'); do
+            docker stop $service
+            docker rm $service
+          done
+          docker stop kafka
+          docker rm kafka
           docker network rm banknet

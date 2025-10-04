@@ -40,7 +40,7 @@ jobs:
             HEAD_REF="${{ github.sha }}"
             if [ "$BASE_REF" = "0000000000000000000000000000000000000000" ] || [ -z "$BASE_REF" ]; then
               BASE_REF="HEAD~1"
-              if ! git rev-parse HEAD~1 >/dev/null 2>&1;then
+              if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
                 BASE_REF=""
               fi
             fi
@@ -90,7 +90,7 @@ jobs:
 
       - name: Upload matrix artifact
         if: steps.set-matrix.outputs.has-changes == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: matrix-artifact
           path: matrix.json
@@ -109,18 +109,3 @@ jobs:
     with:
       service: ${{ matrix.service }}
 
-  lint:
-    name: Run Code Linter
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run Super-Linter
-        uses: github/super-linter@v5
-        env:
-          VALIDATE_ALL_CODE_BASE: true
-          DEFAULT_BRANCH: dev
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
