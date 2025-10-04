@@ -2,7 +2,7 @@ name: Build Services
 
 on:
   workflow_run:
-    workflows: ["Detect Changes"]
+    workflows: ["Build and Test Services"]
     types:
       - completed
 
