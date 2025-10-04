@@ -51,6 +51,9 @@ jobs:
   maven-build:
     needs: build
     if: needs.build.outputs.has-changes == 'true'
+    permissions:
+      security-events: write
+      contents: read
     strategy:
       matrix:
         service: ${{ fromJson(needs.build.outputs.matrix) }}
