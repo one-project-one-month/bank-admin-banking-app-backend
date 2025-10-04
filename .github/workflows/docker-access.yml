@@ -1,32 +1,113 @@
 name: Integration Tests
 
 on:
-  pull_request:
-    branches:
-      - dev
+  workflow_run:
+    workflows: ["Build and Test Services"]
+    types:
+      - completed
 
 jobs:
   run-integration-tests:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker Images
-        run: docker-compose -f app/infra/docker-compose.yaml build
+      - name: Download matrix artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: matrix-artifact
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      
+      - name: Read matrix from file
+        id: matrix
+        run: |
+          MATRIX_CONTENT=$(cat matrix.json)
+          echo "matrix=$MATRIX_CONTENT" >> $GITHUB_OUTPUT
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build changed services
+        run: |
+          MATRIX='${{ steps.matrix.outputs.matrix }}'
+          if [ -z "$MATRIX" ] || [ "$MATRIX" = "[]" ]; then
+            echo "Matrix is empty, no services to build."
+            exit 0
+          fi
+          for service in $(echo "$MATRIX" | jq -r '.[]'); do
+            if [ -f "app/$service/Dockerfile" ]; then
+              docker build -t $service:latest ./app/$service
+            else
+              echo "No Dockerfile found for $service"
+            fi
+          done
+      
       - name: Start Services
         env:
-          # secrets need to be created in your repository's settings
-          # Settings > Secrets and variables > Actions
           CORPORATE_DB_URL: ${{ secrets.CORPORATE_DB_URL }}
           CORPORATE_DB_USERNAME: ${{ secrets.CORPORATE_DB_USERNAME }}
           CORPORATE_DB_PASSWORD: ${{ secrets.CORPORATE_DB_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_OWNER: ${{ github.repository_owner }}
           GITHUB_REPO: ${{ github.event.repository.name }}
-          GITHUB_TARGET_FOLDER: 'data' # Example folder
-        run: docker-compose -f app/infra/docker-compose.yaml up -d
+          GITHUB_TARGET_FOLDER: 'data'
+        run: |
+          docker network create banknet
+          
+          docker run -d --name kafka --network banknet -p 9092:9092 \
+            -e KAFKA_NODE_ID=1 \
+            -e KAFKA_PROCESS_ROLES=broker,controller \
+            -e KAFKA_CONTROLLER_QUORUM_VOTERS=1@kafka:9093 \
+            -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092,CONTROLLER://kafka:9093 \
+            -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092 \
+            -e KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER \
+            -e KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT \
+            -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT \
+            apache/kafka:4.0.1-rc2
+
+          docker run -d --name transaction-service --network banknet -p 1001:1001 -p 9095:9095 \
+            -e DB_URL=$CORPORATE_DB_URL \
+            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
+            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
+            transaction-service:latest
+          
+          docker run -d --name faq-service --network banknet -p 2001:2001 -p 9094:9094 \
+            -e DB_URL=$CORPORATE_DB_URL \
+            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
+            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
+            faq-service:latest
+
+          docker run -d --name nrc-service --network banknet -p 3002:3002 -p 9093:9093 \
+            -e DB_URL=$CORPORATE_DB_URL \
+            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
+            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
+            nrc-service:latest
+
+          docker run -d --name user-service --network banknet -p 3001:3001 -p 9091:9091 \
+            -e DB_URL=$CORPORATE_DB_URL \
+            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
+            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
+            user-service:latest
+
+          docker run -d --name mail-service --network banknet -p 7000:7000 mail-service:latest
+
+          docker run -d --name upload-service --network banknet -p 8001:8000 \
+            -e GITHUB_TOKEN=$GITHUB_TOKEN \
+            -e GITHUB_OWNER=$GITHUB_OWNER \
+            -e GITHUB_REPO=$GITHUB_REPO \
+            -e GITHUB_TARGET_FOLDER=$GITHUB_TARGET_FOLDER \
+            upload-service:latest
+
+          docker run -d --name auth-service --network banknet -p 9999:9999 \
+            -e DB_URL=$CORPORATE_DB_URL \
+            -e DB_USERNAME=$CORPORATE_DB_USERNAME \
+            -e DB_PASSWORD=$CORPORATE_DB_PASSWORD \
+            auth-service:latest
+
+          docker run -d --name gateway-service --network banknet -p 8080:8080 gateway-service:latest
 
       - name: Wait for Services to be Healthy
         run: |
@@ -36,8 +117,6 @@ jobs:
           TIMEOUT=180
           INTERVAL=5
           
-          # --- Define services and their health check endpoints ---
-          # The ports are the host machine ports from your docker-compose.yaml
           declare -A SERVICES
           SERVICES=(
             ["gateway-service"]="http://localhost:8080/health"
@@ -45,7 +124,6 @@ jobs:
             ["user-service"]="http://localhost:3001/health"
             ["transaction-service"]="http://localhost:1001/health"
           )
-          # ---
           
           declare -A healthy_services
           for service in "${!SERVICES[@]}"; do
@@ -60,13 +138,12 @@ jobs:
               url=${SERVICES[$service]}
               if [ ${healthy_services[$service]} -eq 0 ]; then
                 echo "Checking health of $service at $url..."
-                status_code=$(curl -s -o /dev/null -w "%{http_code}" "$url" || echo "000")
+                status_code=$(curl -s -o /dev/null -w "%{{http_code}}" "$url" || echo "000")
                 
                 if [ "$status_code" -eq 200 ]; then
                   echo "$service is healthy!"
                   healthy_services[$service]=1
                 else
-                  echo "$service is not healthy yet (status: $status_code)."
                   all_healthy=0
                 fi
               fi
@@ -82,14 +159,6 @@ jobs:
             
             if [ $elapsed_time -ge $TIMEOUT ]; then
               echo "Timeout reached. Not all services are healthy."
-              echo "Final health check status:"
-              for service in "${!SERVICES[@]}"; do
-                if [ ${healthy_services[$service]} -eq 0 ]; then
-                  echo "- $service: FAILED"
-                else
-                  echo "- $service: OK"
-                fi
-              done
               exit 1
             fi
             
@@ -100,16 +169,25 @@ jobs:
         run: |
           echo "****************************************************************"
           echo "* TODO: Add your integration test command here.                *"
-          echo "* For example:                                                 *"
-          echo "*   mvn -B test -f integration-tests/pom.xml                   *"
           echo "****************************************************************"
-          # This command will fail the step to remind you to add real tests.
           exit 1
 
       - name: Show Docker Logs on Failure
         if: failure()
-        run: docker-compose -f app/infra/docker-compose.yaml logs
+        run: |
+          docker logs gateway-service
+          docker logs auth-service
+          docker logs user-service
+          docker logs transaction-service
+          docker logs nrc-service
+          docker logs faq-service
+          docker logs mail-service
+          docker logs upload-service
+          docker logs kafka
 
       - name: Tear Down Services
-        if: always() # Always run this step to clean up the environment
-        run: docker-compose -f app/infra/docker-compose.yaml down
+        if: always()
+        run: |
+          docker stop gateway-service auth-service user-service transaction-service nrc-service faq-service mail-service upload-service kafka
+          docker rm gateway-service auth-service user-service transaction-service nrc-service faq-service mail-service upload-service kafka
+          docker network rm banknet
