@@ -10,5 +10,6 @@ public class UserRepository implements PanacheRepository<User> {
 
     public Optional<User> findByUsername(String username) {
         return find("username", username).firstResultOptional();
+        // return find("username = ?1 and role = ?2", username, role).firstResultOptional(); --- IGNORE ---
     }
 }
