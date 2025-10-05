@@ -19,5 +19,5 @@ grpc:
       address: 'static://user-service:9091'
       negotiation-type: plaintext
     faq-service:
-      address: 'static://faq-service:9094'
+      address: 'static://localhost:9094'
       negotiation-type: plaintext
