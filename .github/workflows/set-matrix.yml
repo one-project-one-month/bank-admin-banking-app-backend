@@ -55,13 +55,13 @@ jobs:
           else
             CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
             if echo "$CHANGED_FILES" | grep -q '^shared/'; then
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
             fi
             if echo "$CHANGED_FILES" | grep -q '^.github/workflows/'; then
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
             fi
             if echo "$CHANGED_FILES" | grep -qE '^(pom.xml|build.gradle|settings.gradle|gradle.properties)'; then
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
             fi
           fi
           
