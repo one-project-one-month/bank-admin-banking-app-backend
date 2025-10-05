@@ -8,7 +8,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class UserRepository implements PanacheRepository<User> {
 
-    public Optional<User> findByUsername(String username) {
-        return find("username", username).firstResultOptional();
+    public Optional<User> findByUsername(String username, String role) {
+        return find("username = ?1 and role = ?2", username, role).firstResultOptional();
     }
 }

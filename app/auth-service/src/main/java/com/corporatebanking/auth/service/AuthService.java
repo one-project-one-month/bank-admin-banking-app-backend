@@ -15,8 +15,8 @@ public class AuthService {
     @Inject
     UserRepository userRepository;
 
-    public String authenticate(String username, String password) {
-        Optional<User> userOptional = userRepository.findByUsername(username);
+    public String authenticate(String username, String password, String role) {
+        Optional<User> userOptional = userRepository.findByUsername(username, role);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
