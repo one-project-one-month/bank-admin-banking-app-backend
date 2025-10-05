@@ -1,4 +1,4 @@
-name: Chnage Dectection
+name: Change Detection
 
 on:
   push:
@@ -9,6 +9,10 @@ on:
     branches:
       - dev
       - ft/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   set-matrix:
@@ -56,7 +60,7 @@ jobs:
             if echo "$CHANGED_FILES" | grep -q '^.github/workflows/'; then
               CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
             fi
-            if echo "$CHANGED_FILES" | grep -qE '^(pom.xml|build.gradle|settings.gradle|gradle.properties)$'; then
+            if echo "$CHANGED_FILES" | grep -qE '^(pom.xml|build.gradle|settings.gradle|gradle.properties)'; then
               CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -printf '%f\n')
             fi
           fi
