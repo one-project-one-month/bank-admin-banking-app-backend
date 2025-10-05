@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - dev
-      - ft/**
+      - "ft/**"
   pull_request:
     branches:
       - dev
-      - ft/**
+      - "ft/**"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
