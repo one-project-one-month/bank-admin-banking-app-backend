@@ -19,18 +19,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/faq")
+@RequestMapping("/api/v1/faqs")
 public class UpdateFaqController {
   
   @GrpcClient("faq-service")
   private UpdateFaqServiceGrpc.UpdateFaqServiceBlockingStub blockingStub;
   
-  @PutMapping
-  public ResponseEntity<UpdateFaqResponseDto<UpdateFaqGrpcResponseDto>> updateFaq(@RequestBody UpdateFaqRequestDto requestDto) {
+  @PutMapping("/{id}")
+  public ResponseEntity<UpdateFaqResponseDto<UpdateFaqGrpcResponseDto>> updateFaq(@PathVariable("id") int id, @RequestBody UpdateFaqRequestDto requestDto) {
     try {
       UpdateFaqRequest grpcRequest = UpdateFaqRequest.newBuilder()
+        .setId(id)
         .setQuestion(requestDto.question())
         .setAnswer(requestDto.answer())
+        .setCategoryId(requestDto.categoryId())
         .build();
 
       UpdateFaqResponse grpcResponse = blockingStub.updateFaq(grpcRequest);
