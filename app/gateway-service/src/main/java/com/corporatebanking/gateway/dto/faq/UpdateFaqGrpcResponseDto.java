@@ -1,8 +1,10 @@
 package com.corporatebanking.gateway.dto.faq;
 
 public record UpdateFaqGrpcResponseDto(
+  int id,
   String question,
   String answer,
-  Long createdAt,
-  Long updatedAt
+  UpdateFaqCategoryGrpcResponseDto updateFaqCategoryGrpcResponseDto,
+  String createdAt,
+  String updatedAt
 ) { }
