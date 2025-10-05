@@ -11,9 +11,10 @@ service UpdateFaqService {
 }
 
 message UpdateFaqRequest {
-  string question = 1;
-  string answer = 2;
-  int32 categoryId = 3;
+  int32 id = 1;
+  string question = 2;
+  string answer = 3;
+  int32 categoryId = 4;
 }
 
 message UpdateFaqCategoryResponse {
