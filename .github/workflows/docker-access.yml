@@ -122,7 +122,6 @@ jobs:
           done
 
           if [ ${#services_to_check[@]} -eq 0 ]; then
-            echo "No services with health checks to wait for."
             exit 0
           fi
 
@@ -132,8 +131,9 @@ jobs:
             for service in "${!services_to_check[@]}"; do
               url=${services_to_check[$service]}
               status_code=$(curl -s -o /dev/null -w "%{{http_code}}" "$url" || echo "000")
-              if [ "$status_code" -eq 200 ]; then
-                echo "$service is healthy!"
+              status_code=$(curl -s -o /dev/null -w "%{{http_code}}" "$url" || echo "000")
+
+              if [ "$status_code" = "200" ]; then
                 unset services_to_check[$service] 
               else
                 all_healthy=0
@@ -148,7 +148,6 @@ jobs:
             current_time=$(date +%s)
             elapsed_time=$((current_time - start_time))
             if [ $elapsed_time -ge $TIMEOUT ]; then
-              echo "Timeout waiting for services."
               exit 1
             fi
             sleep $INTERVAL
