@@ -1,0 +1,30 @@
+syntax = "proto3";
+package com.corporatebanking.transaction;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.transaction.grpc";
+option java_outer_classname = "TransactionProto";
+
+service TransactionService {
+    rpc GetAllTransactions(GetAllTransactionsRequest) returns (TransactionListResponse);
+}
+message GetAllTransactionsRequest {
+}
+message TransactionResponse {
+    int64 id=1;
+    repeated AccountType account_type=2;
+    string accountNumber=3;
+    string name=4;
+    double amount=5;
+    string note=6;
+    string created_at=7;
+    string updated_at=8;
+}
+message AccountType{
+    int64 id=1;
+    string name=2;
+}
+
+message TransactionListResponse {
+    repeated TransactionResponse transactions = 1;
+}   
