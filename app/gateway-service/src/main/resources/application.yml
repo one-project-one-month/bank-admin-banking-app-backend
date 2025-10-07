@@ -12,7 +12,6 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: http://auth-service:9999/token/jwks
-
 grpc:
   client:
     user-service:
@@ -29,4 +28,8 @@ grpc:
       negotiation-type: plaintext
     faq-service:
       address: 'static://faq-service:9094'
+      negotiation-type: plaintext
+
+    transaction-service:
+      address: 'static://transaction-service:9095'
       negotiation-type: plaintext
