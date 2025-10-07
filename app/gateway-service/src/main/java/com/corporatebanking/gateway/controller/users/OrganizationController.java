@@ -1,16 +1,29 @@
 package com.corporatebanking.gateway.controller.users;
 
-import com.corporatebanking.organization.grpc.*;
+import com.corporatebanking.nrc.grpc.GetAllNrcCodesRequest;
+import com.corporatebanking.nrc.grpc.NrcCodeListResponse;
+import com.corporatebanking.nrc.grpc.NrcCodeResponse;
+import com.corporatebanking.nrc.grpc.NrcServiceGrpc;
+//import com.corporatebanking.organization.grpc.*;
 
 import com.corporatebanking.gateway.dto.nrc.NrcCodeResponseDto;
 
 import com.corporatebanking.gateway.dto.organization.CreateOrganizationRequestDto;
 import com.corporatebanking.gateway.dto.organization.OrganizationResponseDto;
 import com.corporatebanking.gateway.dto.organization.UpdateOrganizationRequestDto;
+import com.corporatebanking.organization.grpc.CreateOrganizationRequest;
+import com.corporatebanking.organization.grpc.DeleteOrganizationRequest;
+import com.corporatebanking.organization.grpc.DeleteOrganizationResponse;
+import com.corporatebanking.organization.grpc.GetAllOrganizationsRequest;
+import com.corporatebanking.organization.grpc.GetOrganizationRequest;
+import com.corporatebanking.organization.grpc.OrganizationListResponse;
+import com.corporatebanking.organization.grpc.OrganizationResponse;
+import com.corporatebanking.organization.grpc.OrganizationServiceGrpc;
+import com.corporatebanking.organization.grpc.UpdateOrganizationRequest;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.corporatebanking.nrc.grpc.*;
+//import com.corporatebanking.nrc.grpc.*;
 
 import java.util.List;
 import java.util.stream.Collectors;

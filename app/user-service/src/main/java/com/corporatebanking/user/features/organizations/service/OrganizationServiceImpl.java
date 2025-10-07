@@ -68,16 +68,16 @@ public class OrganizationServiceImpl extends OrganizationServiceGrpc.Organizatio
         Optional<OrganizationData> existingOrgOpt = organizationRepository.findById(request.getId());
         if (existingOrgOpt.isPresent()) {
              OrganizationData orgToUpdate = new OrganizationData(
-                request.getId(),
-                request.getName(),
-                request.getShortcode(),
-                request.getAddress(),
-                request.getCountry(),
-                existingOrgOpt.get().createdAt(),
-                null,
-                existingOrgOpt.get().createdBy(),
-                request.getUpdatedBy()
-            );
+                    request.getId(),
+                    request.getName(),
+                    request.getShortcode(),
+                    request.getAddress(),
+                    request.getCountry(),
+                    existingOrgOpt.get().createdAt(),
+                    null,
+                    existingOrgOpt.get().createdBy(),
+                    request.getUpdatedBy()
+             );
             organizationRepository.update(orgToUpdate).ifPresent(updatedOrg -> {
                  responseObserver.onNext(toOrganizationResponse(updatedOrg));
             });
