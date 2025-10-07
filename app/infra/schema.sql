@@ -3,6 +3,8 @@ DROP TABLE IF EXISTS "users" CASCADE;
 DROP TABLE IF EXISTS "profile_detail" CASCADE;
 DROP TABLE IF EXISTS "role" CASCADE;
 DROP TABLE IF EXISTS "organization" CASCADE;
+DROP TABLE IF EXISTS "account_type" CASCADE;
+DROP TABLE IF EXISTS "transactions" CASCADE;
 
 -- Create Organization Table
 CREATE TABLE "organization" (
@@ -113,6 +115,25 @@ INSERT INTO "nrc_code" ("id", "name") VALUES
 (15, 'NRC_TYPE'),
 (16, 'NRC_STATE_CODE');
 
+--create account type table
+CREATE TABLE "account_type" (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+--Create table for storing transactions
+CREATE TABLE "transactions" (
+    id BIGSERIAL PRIMARY KEY,
+    account_type_id BIGINT NOT NULL,
+    account_number VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    amount DOUBLE PRECISION NOT NULL,
+    note TEXT,
+    created_at DATE NOT NULL DEFAULT NOW()::DATE,
+    updated_at    -- Foreign key constraint
+    CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(id)
+);
+
 -- Insert NRC code values
 -- KACHIN_STATE_TOWNSHIP_CODES (Code ID: 1)
 INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
@@ -178,3 +199,12 @@ INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 (16, '1'),(16, '2'),(16, '3'),(16, '4'),(16, '5'),(16, '6'),(16, '7'),
 (16, '8'),(16, '9'),(16, '10'),(16, '11'),(16, '12'),(16, '13'),(16, '14');
+
+-- ACCOUNT_TYPE SAMPLE
+INSERT INTO account_type (id, name) VALUES (1, 'Savings Account');
+INSERT INTO account_type (id, name) VALUES (2, 'Checking Account');
+
+-- TRANSACTIONS SAMPLE
+INSERT INTO transactions (id, account_type_id, account_number, name, amount, note) VALUES
+    (1, 1, '1234567890', 'Alice Johnson', 800.00, 'Health saving'),
+    (2, 2, '100200300400', 'John Doe', 5000.00, 'Monthly salary deposit');
