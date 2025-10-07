@@ -1,4 +1,18 @@
 services:
+#  postgres-db:
+#    image: postgres:15
+#    container_name: postgres-db
+#    ports:
+#      - "5432:5432"
+#    environment:
+#      POSTGRES_DB: Core_Bank
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: postgres
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data
+#    networks:
+#      - banknet
+
   kafka:
     image: apache/kafka:4.0.1-rc2
     ports:
@@ -44,6 +58,8 @@ services:
       - DB_URL=${CORPORATE_DB_URL}
       - DB_USERNAME=${CORPORATE_DB_USERNAME}
       - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
+    depends_on:
+      - postgres
 
   nrc-service:
     build: ../nrc-service
@@ -125,3 +141,6 @@ services:
 networks:
   banknet:
     driver: bridge
+
+volumes:
+  postgres_data:
