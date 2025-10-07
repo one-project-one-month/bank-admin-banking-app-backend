@@ -106,6 +106,26 @@ CREATE TABLE "nrc_code_value" (
     "updated_by" BIGINT,
     FOREIGN KEY ("code_id") REFERENCES "nrc_code"("id") ON DELETE CASCADE
 );
+--create account type table
+CREATE TABLE "account_type" (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL
+);
+
+--Create table for storing transactions
+CREATE TABLE "transactions" (
+    id BIGSERIAL PRIMARY KEY,        
+    account_type_id BIGINT NOT NULL,             
+    account_number VARCHAR(255) NOT NULL UNIQUE,        
+    name VARCHAR(255) NOT NULL,                   
+    amount DOUBLE PRECISION NOT NULL,                      
+    note TEXT,                                   
+    created_at DATE NOT NULL,                     
+    updated_at DATE,                              
+    
+    -- Foreign key constraint
+    CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(id)
+);
 
 -- Insert NRC code categories (States/Regions and NRC Type)
 INSERT INTO "nrc_code" ("id", "name") VALUES
@@ -191,3 +211,52 @@ INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 (16, '1'),(16, '2'),(16, '3'),(16, '4'),(16, '5'),(16, '6'),(16, '7'),
 (16, '8'),(16, '9'),(16, '10'),(16, '11'),(16, '12'),(16, '13'),(16, '14');
+
+
+-- Insert Account Type 
+INSERT INTO "account_type" (name) VALUES
+  ('Savings'),
+  ('Special'),
+  ('Organization');
+
+
+
+
+-- Insert sample data into transactions table
+
+INSERT INTO "transactions" (account_type_id, account_number, name, amount, note, created_at, updated_at) VALUES
+  (1, 'SAV-10001', 'John Doe', 500.00, 'Salary deposit', '2025-09-01', '2025-09-01'),
+  (1, 'SAV-10002', 'Alice Smith', 1200.00, 'ATM withdrawal', '2025-09-02', '2025-09-02'),
+  (2, 'SPL-20001', 'Bob Johnson', 3000.00, 'Special account opening bonus', '2025-09-03', '2025-09-03'),
+  (2, 'ORG-30001', 'Acme Corp.', 15000.00, 'Vendor payment', '2025-09-04', '2025-09-04'),
+  (1, 'SAV-10003', 'Charlie Brown', 450.00, 'Deposit for rent', '2025-09-05', '2025-09-05'),
+  (2, 'SPL-20002', 'Diana Lee', 2000.00, 'Remittance', '2025-09-06', '2025-09-06'),
+  (3, 'ORG-30002', 'Sunrise NGO', 5000.00, 'Grant received', '2025-09-07', '2025-09-07'),
+  (2, 'BUS-40001', 'Frank Moore', 800.00, 'Business expansion fund', '2025-09-08', '2025-09-08'),
+  (1, 'PER-50001', 'Grace Turner', 150.00, 'Payment for groceries', '2025-09-09', '2025-09-09'),
+  (1, 'COR-60001', 'Global Tech Inc.', 20000.00, 'Annual subscription fee', '2025-09-10', '2025-09-10');
+
+-- FAQ
+CREATE TABLE IF NOT EXISTS faq_category(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL default now(),
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS faq(
+    id SERIAL PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    faq_category_id INT REFERENCES FAQ_Category(id) ON DELETE SET NULL,
+    created_at TIMESTAMP NOT NULL default now(),
+    updated_at TIMESTAMP
+);
+
+
+INSERT INTO faq_category (name)
+VALUES
+    ('General Questions'),
+    ('Account & Billing'),
+    ('Technical Support'),
+    ('Privacy & Security');

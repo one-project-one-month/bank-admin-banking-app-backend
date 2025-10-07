@@ -21,3 +21,6 @@ grpc:
     transaction-service:
       address: 'static://transaction-service:9095'
       negotiation-type: plaintext
+    faq-service:
+      address: 'static://faq-service:9094'
+      negotiation-type: plaintext
