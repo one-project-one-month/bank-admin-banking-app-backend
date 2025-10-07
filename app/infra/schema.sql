@@ -223,4 +223,27 @@ INSERT INTO "transactions" (account_type_id, account_number, name, amount, note,
   (1, 'PER-50001', 'Grace Turner', 150.00, 'Payment for groceries', '2025-09-09', '2025-09-09'),
   (1, 'COR-60001', 'Global Tech Inc.', 20000.00, 'Annual subscription fee', '2025-09-10', '2025-09-10');
 
+-- FAQ
+CREATE TABLE IF NOT EXISTS faq_category(
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL default now(),
+    updated_at TIMESTAMP
+);
 
+CREATE TABLE IF NOT EXISTS faq(
+    id SERIAL PRIMARY KEY,
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    faq_category_id INT REFERENCES FAQ_Category(id) ON DELETE SET NULL,
+    created_at TIMESTAMP NOT NULL default now(),
+    updated_at TIMESTAMP
+);
+
+
+INSERT INTO faq_category (name)
+VALUES
+    ('General Questions'),
+    ('Account & Billing'),
+    ('Technical Support'),
+    ('Privacy & Security');
