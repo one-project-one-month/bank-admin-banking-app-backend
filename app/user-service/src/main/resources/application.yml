@@ -17,5 +17,5 @@ grpc:
     port: 9091
   client:
     nrc-service:
-      address: 'static://nrc-service:9093'
+      address: "static://nrc-service:9093"
       negotiation-type: plaintext

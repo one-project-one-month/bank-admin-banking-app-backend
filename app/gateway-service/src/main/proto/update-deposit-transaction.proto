@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package com.corporatebanking.transaction;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.transaction.grpc";
+option java_outer_classname = "UpdateDepositTransactionProto";
+
+service UpdateDepositTranx {
+  rpc UpdateDepositTranx(UpdateDepositTrnxRequest) returns (DepositTranxResponse);
+}
+
+message UpdateDepositTrnxRequest {
+  int64 transaction_id = 1;
+  DepositTranxRequest deposit_tranx_request = 2;
+}
+
+message DepositTranxRequest {
+  int64 account_type_id = 1;
+  string account_number = 2;
+  string name = 3;
+  double amount = 4;
+  string note = 5;
+}
+
+message AccountTypeDto {
+  int64 id = 1;
+  string name = 2;
+}
+
+message DepositTranxDto {
+  int64 id = 1;
+  AccountTypeDto accountType = 2;
+  string accountNumber = 3;
+  string name = 4;
+  double amount = 5;
+  string note = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}
+
+message DepositTranxResponse {
+  int32 status_code = 1;
+  string message = 2;
+  DepositTranxDto transaction = 3;
+}
