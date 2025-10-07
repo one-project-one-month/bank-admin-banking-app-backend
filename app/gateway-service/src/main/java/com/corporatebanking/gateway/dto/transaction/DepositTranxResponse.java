@@ -1,4 +1,4 @@
-package java.com.corporatebanking.gateway.dto.transaction;
+package com.corporatebanking.gateway.dto.transaction;
 
 public record DepositTranxResponse<T> (
     Integer code,

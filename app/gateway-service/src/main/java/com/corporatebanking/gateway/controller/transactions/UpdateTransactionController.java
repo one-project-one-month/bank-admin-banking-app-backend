@@ -1,4 +1,4 @@
-package java.com.corporatebanking.gateway.controller;
+package com.corporatebanking.gateway.controller.transactions;
 
 import com.corporatebanking.gateway.dto.transaction.AccountTypeDto;
 import com.corporatebanking.gateway.dto.transaction.DepositTranxDto;
