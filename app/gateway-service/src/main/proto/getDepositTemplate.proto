@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package com.corporatebanking.transaction;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.transaction.grpc";
+option java_outer_classname = "DepositTemplateProto";
+
+service DepositTemplateService {
+    rpc GetDepositTemplate(GetDepositTemplateRequest) returns (DepositTemplateResponse);
+}
+
+message DepositTemplateResponse {
+    repeated AccountTypeOption accountTypeOptions = 1;
+}
+
+message AccountTypeOption {
+    int64 id = 1;
+    string name = 2;
+}
+
+message GetDepositTemplateRequest {}

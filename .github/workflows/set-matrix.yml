@@ -1,0 +1,94 @@
+name: Change Detection
+
+on:
+  push:
+    branches:
+      - dev
+      - "ft/**"
+  pull_request:
+    branches:
+      - dev
+      - "ft/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  set-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has-changes: ${{ steps.set-matrix.outputs.has-changes }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Detect changed services
+        id: set-matrix
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin ${{ github.base_ref }} --quiet
+            BASE_REF=$(git merge-base origin/${{ github.base_ref }} HEAD)
+            HEAD_REF="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_REF="${{ github.event.before }}"
+            HEAD_REF="${{ github.sha }}"
+
+            if [ -z "$BASE_REF" ] || [ "$BASE_REF" = "0000000000000000000000000000000000000000" ]; then
+              BASE_REF=$(git rev-parse HEAD^ || echo "")
+            fi
+          fi
+
+          if [ -z "$BASE_REF" ] || ! git cat-file -e "$BASE_REF"^{commit} 2>/dev/null; then
+            BASE_REF=$(git rev-parse HEAD^ || echo "")
+          fi
+
+          if [ -z "$BASE_REF" ]; then
+            CHANGED_FILES=$(git ls-files)
+          else
+            CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF)
+          fi
+
+          if [ -z "$CHANGED_FILES" ]; then
+            CHANGED_SERVICES=""
+          else
+            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
+            if echo "$CHANGED_FILES" | grep -q '^shared/'; then
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
+            fi
+            if echo "$CHANGED_FILES" | grep -q '^.github/workflows/'; then
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
+            fi
+            if echo "$CHANGED_FILES" | grep -qE '^(pom.xml|build.gradle|settings.gradle|gradle.properties)'; then
+              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
+            fi
+          fi
+          
+          if [ -z "$CHANGED_SERVICES" ]; then
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+          else
+            MATRIX=$(echo "$CHANGED_SERVICES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      
+      - name: Save matrix to file
+        if: steps.set-matrix.outputs.has-changes == 'true'
+        run: |
+          echo '${{ steps.set-matrix.outputs.matrix }}' | jq -c '.' > matrix.json
+          cat matrix.json
+
+      - name: Upload matrix artifact
+        if: steps.set-matrix.outputs.has-changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: matrix-artifact
+          path: matrix.json
+          retention-days: 1

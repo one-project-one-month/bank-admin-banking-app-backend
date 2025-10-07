@@ -16,6 +16,7 @@ import java.util.Map;
 @Path("/auth")
 public class AuthResource {
 
+
     @Inject
     AuthService authService;
 
