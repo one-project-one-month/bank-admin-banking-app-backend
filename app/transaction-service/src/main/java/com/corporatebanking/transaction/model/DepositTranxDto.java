@@ -1,0 +1,14 @@
+package com.corporatebanking.transaction.model;
+
+import java.time.LocalDate;
+
+public record DepositTranxDto(
+        Long id,
+        AccountTypeDto accountType,
+        String accountNumber,
+        String name,
+        double amount,
+        String note,
+        LocalDate createdAt,
+        LocalDate updatedAt
+) {}
