@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <parent>
+    <artifactId>corporate-banking-app-backend</artifactId>
+    <groupId>com.corporatebanking</groupId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.corporatebanking</groupId>
   <artifactId>upload-service</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
   <build>
     <plugins>
       <plugin>
@@ -18,7 +21,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>com.corporatebanking.upload.UploadService</mainClass>
+                  <mainClass>com.sample.upload.UploadService</mainClass>
                 </transformer>
               </transformers>
             </configuration>
@@ -27,9 +30,4 @@
       </plugin>
     </plugins>
   </build>
-  <properties>
-    <maven.compiler.target>${java.version}</maven.compiler.target>
-    <java.version>17</java.version>
-    <maven.compiler.source>${java.version}</maven.compiler.source>
-  </properties>
 </project>

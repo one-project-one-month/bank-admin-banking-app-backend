@@ -2,15 +2,14 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.corporatebanking</groupId>
-    <artifactId>upload-service</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <parent>
+        <groupId>com.corporatebanking</groupId>
+        <artifactId>corporate-banking-app-backend</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
 
-    <properties>
-        <java.version>17</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
-    </properties>
+    <artifactId>upload-service</artifactId>
 
     <dependencies>
         <dependency>
@@ -24,7 +23,6 @@
             <version>2.0.7</version>
         </dependency>
 
-        <!-- GitHub API Client -->
         <dependency>
             <groupId>org.kohsuke</groupId>
             <artifactId>github-api</artifactId>
@@ -47,7 +45,7 @@
                         <configuration>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>com.corporatebanking.upload.UploadService</mainClass>
+                                    <mainClass>com.sample.upload.UploadService</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
