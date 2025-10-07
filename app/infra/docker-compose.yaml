@@ -1,17 +1,4 @@
 services:
-#  postgres-db:
-#    image: postgres:15
-#    container_name: postgres-db
-#    ports:
-#      - "5432:5432"
-#    environment:
-#      POSTGRES_DB: Core_Bank
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: postgres
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
-#    networks:
-#      - banknet
 
   kafka:
     image: apache/kafka:4.0.1-rc2
