@@ -70,10 +70,10 @@
             <artifactId>spring-security-oauth2-jose</artifactId>
         </dependency>
         <dependency>
-		  <groupId>com.opombanking-user</groupId>
-		  <artifactId>protos</artifactId>
-		  <version>1.0.1-SNAPSHOT</version>
-		</dependency>
+    <groupId>com.opombanking-user</groupId>
+    <artifactId>protos</artifactId>
+</dependency>
+
     </dependencies>
     <build>
         <extensions>
