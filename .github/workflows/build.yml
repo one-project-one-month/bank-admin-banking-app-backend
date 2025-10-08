@@ -132,7 +132,7 @@ jobs:
       - name: Build service with dependencies
         working-directory: app
         run: |
-          mvn clean install -pl ${{ matrix.service }} -am -DskipTests
+          mvn clean install -e -pl ${{ matrix.service }} -am -DskipTests
         continue-on-error: false
 
       - name: Upload JAR artifact
