@@ -62,34 +62,6 @@ jobs:
 
       - name: Build service matrix
         id: set-matrix
-        run: |
-          SERVICES=()
-          if [ "${{ steps.check-parent.outputs.changed }}" == "true" ] || [ "${{ steps.filter.outputs.workflow }}" == "true" ]; then
-            SERVICES=("auth-service" "faq-service" "gateway-service" "mail-service" "nrc-service" "transaction-service" "upload-service" "user-service")
-          else
-            [ "${{ steps.filter.outputs.auth-service }}" == "true" ] && SERVICES+=("auth-service")
-            [ "${{ steps.filter.outputs.faq-service }}" == "true" ] && SERVICES+=("faq-service")
-            [ "${{ steps.filter.outputs.gateway-service }}" == "true" ] && SERVICES+=("gateway-service")
-            [ "${{ steps.filter.outputs.mail-service }}" == "true" ] && SERVICES+=("mail-service")
-            [ "${{ steps.filter.outputs.nrc-service }}" == "true" ] && SERVICES+=("nrc-service")
-            [ "${{ steps.filter.outputs.transaction-service }}" == "true" ] && SERVICES+=("transaction-service")
-            [ "${{ steps.filter.outputs.upload-service }}" == "true" ] && SERVICES+=("upload-service")
-            [ "${{ steps.filter.outputs.user-service }}" == "true" ] && SERVICES+=("user-service")
-          fi
-        
-          if [ ${#SERVICES[@]} -eq 0 ]; then
-            MATRIX="[]"
-            HAS_CHANGES="false"
-          else
-            MATRIX=$(printf '%s\n' "${SERVICES[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-            HAS_CHANGES="true"
-          fi
-          
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "has-changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
-
-      - name: Build service matrix
-        id: set-matrix
         uses: actions/github-script@v7
         with:
           script: |
