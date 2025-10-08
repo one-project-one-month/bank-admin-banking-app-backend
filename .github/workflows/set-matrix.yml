@@ -15,80 +15,127 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  set-matrix:
+  detect-changes:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       has-changes: ${{ steps.set-matrix.outputs.has-changes }}
+      parent-pom-changed: ${{ steps.check-parent.outputs.changed }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Detect changed services
+      - name: Check parent POM changes
+        id: check-parent
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - 'app/pom.xml'
+
+      - name: Check service changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            auth-service:
+              - 'app/auth-service/**'
+            faq-service:
+              - 'app/faq-service/**'
+            gateway-service:
+              - 'app/gateway-service/**'
+            mail-service:
+              - 'app/mail-service/**'
+            nrc-service:
+              - 'app/nrc-service/**'
+            transaction-service:
+              - 'app/transaction-service/**'
+            upload-service:
+              - 'app/upload-service/**'
+            user-service:
+              - 'app/user-service/**'
+            workflow:
+              - '.github/workflows/**'
+
+      - name: Build service matrix
         id: set-matrix
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git fetch origin ${{ github.base_ref }} --quiet
-            BASE_REF=$(git merge-base origin/${{ github.base_ref }} HEAD)
-            HEAD_REF="${{ github.event.pull_request.head.sha }}"
+          SERVICES=()
+          if [ "${{ steps.check-parent.outputs.changed }}" == "true" ] || [ "${{ steps.filter.outputs.workflow }}" == "true" ]; then
+            SERVICES=("auth-service" "faq-service" "gateway-service" "mail-service" "nrc-service" "transaction-service" "upload-service" "user-service")
           else
-            BASE_REF="${{ github.event.before }}"
-            HEAD_REF="${{ github.sha }}"
-
-            if [ -z "$BASE_REF" ] || [ "$BASE_REF" = "0000000000000000000000000000000000000000" ]; then
-              BASE_REF=$(git rev-parse HEAD^ || echo "")
-            fi
+            [ "${{ steps.filter.outputs.auth-service }}" == "true" ] && SERVICES+=("auth-service")
+            [ "${{ steps.filter.outputs.faq-service }}" == "true" ] && SERVICES+=("faq-service")
+            [ "${{ steps.filter.outputs.gateway-service }}" == "true" ] && SERVICES+=("gateway-service")
+            [ "${{ steps.filter.outputs.mail-service }}" == "true" ] && SERVICES+=("mail-service")
+            [ "${{ steps.filter.outputs.nrc-service }}" == "true" ] && SERVICES+=("nrc-service")
+            [ "${{ steps.filter.outputs.transaction-service }}" == "true" ] && SERVICES+=("transaction-service")
+            [ "${{ steps.filter.outputs.upload-service }}" == "true" ] && SERVICES+=("upload-service")
+            [ "${{ steps.filter.outputs.user-service }}" == "true" ] && SERVICES+=("user-service")
           fi
-
-          if [ -z "$BASE_REF" ] || ! git cat-file -e "$BASE_REF"^{commit} 2>/dev/null; then
-            BASE_REF=$(git rev-parse HEAD^ || echo "")
-          fi
-
-          if [ -z "$BASE_REF" ]; then
-            CHANGED_FILES=$(git ls-files)
+        
+          if [ ${#SERVICES[@]} -eq 0 ]; then
+            MATRIX="[]"
+            HAS_CHANGES="false"
           else
-            CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF)
-          fi
-
-          if [ -z "$CHANGED_FILES" ]; then
-            CHANGED_SERVICES=""
-          else
-            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
-            if echo "$CHANGED_FILES" | grep -q '^shared/'; then
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
-            fi
-            if echo "$CHANGED_FILES" | grep -q '^.github/workflows/'; then
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
-            fi
-            if echo "$CHANGED_FILES" | grep -qE '^(pom.xml|build.gradle|settings.gradle|gradle.properties)'; then
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -not -name 'infra' -printf '%f\n')
-            fi
+            MATRIX=$(printf '%s\n' "${SERVICES[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            HAS_CHANGES="true"
           fi
           
-          if [ -z "$CHANGED_SERVICES" ]; then
-            echo "matrix=[]" >> $GITHUB_OUTPUT
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          else
-            MATRIX=$(echo "$CHANGED_SERVICES" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-            echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          fi
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "has-changes=$HAS_CHANGES" >> $GITHUB_OUTPUT
 
-      
-      - name: Save matrix to file
-        if: steps.set-matrix.outputs.has-changes == 'true'
-        run: |
-          echo '${{ steps.set-matrix.outputs.matrix }}' | jq -c '.' > matrix.json
-          cat matrix.json
+      - name: Build service matrix
+        id: set-matrix
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const allServices = [
+              'auth-service',
+              'faq-service', 
+              'gateway-service',
+              'mail-service',
+              'nrc-service',
+              'transaction-service',
+              'upload-service',
+              'user-service'
+            ];
+            
+            const parentChanged = '${{ steps.check-parent.outputs.changed }}' === 'true';
+            const workflowChanged = '${{ steps.filter.outputs.workflow }}' === 'true';
+            
+            let services = [];
+            
+            if (parentChanged || workflowChanged) {
+              services = allServices;
+            } else {
+              const filters = {
+                'auth-service': '${{ steps.filter.outputs.auth-service }}',
+                'faq-service': '${{ steps.filter.outputs.faq-service }}',
+                'gateway-service': '${{ steps.filter.outputs.gateway-service }}',
+                'mail-service': '${{ steps.filter.outputs.mail-service }}',
+                'nrc-service': '${{ steps.filter.outputs.nrc-service }}',
+                'transaction-service': '${{ steps.filter.outputs.transaction-service }}',
+                'upload-service': '${{ steps.filter.outputs.upload-service }}',
+                'user-service': '${{ steps.filter.outputs.user-service }}'
+              };
+              
+              services = Object.keys(filters).filter(service => filters[service] === 'true');
+            }
+            
+            const matrix = JSON.stringify(services);
+            const hasChanges = services.length > 0;
+            
+            core.setOutput('matrix', matrix);
+            core.setOutput('has-changes', hasChanges.toString());
 
       - name: Upload matrix artifact
         if: steps.set-matrix.outputs.has-changes == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: matrix-artifact
-          path: matrix.json
+          name: build-matrix
+          path: artifacts/
           retention-days: 1
