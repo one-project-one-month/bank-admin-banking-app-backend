@@ -18,6 +18,7 @@
     </properties>
 
     <modules>
+    	<module>infra/protos</module>
         <module>auth-service</module>
         <module>faq-service</module>
         <module>gateway-service</module>
@@ -44,6 +45,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+		  <groupId>com.opombanking-user</groupId>
+		  <artifactId>protos</artifactId>
+		  <version>1.0.1-SNAPSHOT</version>
+	   </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
