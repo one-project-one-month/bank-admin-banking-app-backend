@@ -3,7 +3,7 @@ package com.corporatebanking.transaction;
 
 option java_multiple_files = true;
 option java_package = "com.corporatebanking.transaction.grpc";
-option java_outer_classname = "TransactionProto";
+option java_outer_classname = "getAllTransactionsProto";
 
 service TransactionService {
     rpc GetAllTransactions(GetAllTransactionsRequest) returns (TransactionListResponse);
