@@ -116,9 +116,9 @@ public class CreateFaqController {
             DeleteFaq response = createFaqServiceBlockingStub.deleFaqById(grpcRequest);
 
             CreateFaqResponseDto<Object> responseDto = new CreateFaqResponseDto<>(
-                   200,
+                   204,
                     response.getMessage(),
-                    null
+                    ""
             );
 
             return ResponseEntity.status(200).body(responseDto);
