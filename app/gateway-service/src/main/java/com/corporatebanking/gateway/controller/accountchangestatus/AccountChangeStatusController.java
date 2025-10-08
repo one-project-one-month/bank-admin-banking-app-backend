@@ -15,6 +15,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/accounts")
 public class AccountChangeStatusController {
 
+    // gRPC client for user service
     @GrpcClient("user-service")
     private AccountServiceGrpc.AccountServiceBlockingStub accountServiceStub;
 
