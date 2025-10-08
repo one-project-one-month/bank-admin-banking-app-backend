@@ -4,7 +4,7 @@ package com.corporatebanking.faq;
 
 option java_multiple_files = true;
 option java_package = "com.corporatebanking.faq.grpc";
-option java_outer_classname = "FaqProto";
+option java_outer_classname = "UpdateFaqProto";
 
 service UpdateFaqService {
   rpc UpdateFaq(UpdateFaqRequest) returns (UpdateFaqResponse);
