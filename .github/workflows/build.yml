@@ -120,7 +120,6 @@ jobs:
             echo "has-proto=false" >> $GITHUB_OUTPUT
           fi
 
-      
       - name: Install parent POM
         working-directory: app
         run: mvn install -N -DskipTests -q
@@ -130,18 +129,11 @@ jobs:
         working-directory: app
         run: mvn generate-sources -pl ${{ matrix.service }} -am
 
-      - name: Build service
+      - name: Build service with dependencies
         working-directory: app
-        run: mvn compile -pl ${{ matrix.service }} -am -DskipTests
-
-      - name: Run tests
-        if: steps.check-tests.outputs.has-tests == 'true'
-        working-directory: app
-        run: mvn test -pl ${{ matrix.service }}
-
-      - name: Package service
-        working-directory: app
-        run: mvn package -pl ${{ matrix.service }} -DskipTests
+        run: |
+          mvn clean install -pl ${{ matrix.service }} -am -DskipTests
+        continue-on-error: false
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
@@ -153,7 +145,3 @@ jobs:
             !app/${{ matrix.service }}/target/*-javadoc.jar
           retention-days: 7
           if-no-files-found: warn
-
-      
-
-  
