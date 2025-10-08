@@ -104,8 +104,13 @@ jobs:
             core.setOutput('matrix', matrix);
             core.setOutput('has-changes', hasChanges.toString());
 
+      - name: Save matrix to file
+        run: |
+          mkdir -p artifacts
+          echo '${{ steps.set-matrix.outputs.matrix }}' | jq -c '.' > artifacts/matrix.json
+          echo '${{ steps.check-parent.outputs.changed }}' > artifacts/parent-pom-changed.txt
+
       - name: Upload matrix artifact
-        if: steps.set-matrix.outputs.has-changes == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: build-matrix
