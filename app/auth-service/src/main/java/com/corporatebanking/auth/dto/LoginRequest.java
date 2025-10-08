@@ -1,3 +1,3 @@
 package com.corporatebanking.auth.dto;
 
-public record LoginRequest(String username, String password) {}
+public record LoginRequst(String username, String password) {}
