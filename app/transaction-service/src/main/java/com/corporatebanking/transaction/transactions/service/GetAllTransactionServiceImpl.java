@@ -8,44 +8,44 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.corporatebanking.transaction.grpc.*;
-import com.corporatebanking.transaction.transactions.models.TransactionData;
-import com.corporatebanking.transaction.transactions.models.AccountTypeData;
-import com.corporatebanking.transaction.transactions.repository.jdbc.TransactionJdbcRepository;
+import com.corporatebanking.transaction.transactions.models.GetAllTransactionData;
+import com.corporatebanking.transaction.transactions.models.GetAllAccountTypeData;
+import com.corporatebanking.transaction.transactions.repository.jdbc.GetAllTransactionJdbcRepository;
 
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 
 @GrpcService
-public class TransactionServiceImpl extends TransactionServiceGrpc.TransactionServiceImplBase {
-    private final TransactionJdbcRepository transactionJdbcRepository;
+public class GetAllTransactionServiceImpl extends GetAllTransactionServiceGrpc.GetAllTransactionServiceImplBase {
+    private final GetAllTransactionJdbcRepository transactionJdbcRepository;
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE;
    
-    public TransactionServiceImpl(TransactionJdbcRepository transactionJdbcRepository) {
+    public GetAllTransactionServiceImpl(GetAllTransactionJdbcRepository transactionJdbcRepository) {
         this.transactionJdbcRepository = transactionJdbcRepository;
     }
 
     @Override
-    public void getAllTransactions(GetAllTransactionsRequest request, StreamObserver<TransactionListResponse> responseObserver) {
-        List<TransactionData> transactions = transactionJdbcRepository.findAll();
-        List<TransactionResponse> transactionResponses = transactions.stream()
+    public void getAllTransactions(GetAllTransactionsRequest request, StreamObserver<GetAllTransactionListResponse> responseObserver) {
+        List<GetAllTransactionData> transactions = transactionJdbcRepository.findAll();
+        List<GetAllTransactionsResponse> transactionResponses = transactions.stream()
                 .map(this::toTransactionResponse)
                 .collect(Collectors.toList());
 
-        TransactionListResponse response = TransactionListResponse.newBuilder()
+        GetAllTransactionListResponse response = GetAllTransactionListResponse.newBuilder()
                 .addAllTransactions(transactionResponses)
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
     
-    private TransactionResponse toTransactionResponse(TransactionData transactionData) {
+    private GetAllTransactionsResponse toTransactionResponse(GetAllTransactionData transactionData) {
         // Convert AccountTypeData to gRPC AccountType
-        AccountType accountType = AccountType.newBuilder()
+        GetAllAccountType accountType = GetAllAccountType.newBuilder()
                 .setId(transactionData.accountType().id())
                 .setName(transactionData.accountType().name())
                 .build();
-        
-        return TransactionResponse.newBuilder()
+
+        return GetAllTransactionsResponse.newBuilder()
                 .setId(transactionData.id())
                 .addAccountType(accountType)
                 .setAccountNumber(transactionData.accountNumber())
