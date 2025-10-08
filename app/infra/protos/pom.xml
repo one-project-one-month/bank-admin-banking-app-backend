@@ -34,7 +34,7 @@
         <version>${grpc.version}</version>
     </dependency>
     <dependency>
-        <groupId>io.grp</groupId>
+        <groupId>io.grpc</groupId>
         <artifactId>grpc-stub</artifactId>
         <version>${grpc.version}</version>
     </dependency>
@@ -90,4 +90,3 @@
   </plugins>
 </build>
 </project>
-
