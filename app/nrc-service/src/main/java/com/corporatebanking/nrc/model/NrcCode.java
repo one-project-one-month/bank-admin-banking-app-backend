@@ -1,3 +1,3 @@
 package com.corporatebanking.nrc.model;
 
-public record NrcCode(Long id, String name) {}
+public record NrcCod(Long id, String name) {}
