@@ -4,3 +4,7 @@ public record DeleteAccountTypeDTO(
         Long id,
         String name
 ) {}
+//public record DeleteAccountTypeDTO(
+//        Long id,
+//        String name
+//) {}

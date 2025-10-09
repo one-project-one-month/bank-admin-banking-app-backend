@@ -11,11 +11,15 @@ public class DeleteTransactionJdbcRepositoryImpl implements DeleteTransactionJdb
     public DeleteTransactionJdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-
-
-    @Override
-    public int deleteById(Long id) {
-        String sql = "UPDATE transactions SET deleted = TRUE WHERE id = ?";
-        return jdbcTemplate.update(sql, id);
-    }
+    //for soft delete
+//    @Override
+//    public int deleteById(Long id) {
+//        String sql = "UPDATE transactions SET deleted = TRUE WHERE id = ?";
+//        return jdbcTemplate.update(sql, id);
+//    }
+@Override
+public int deleteById(Long id) {
+    String sql = "DELETE FROM transactions WHERE id = ?";
+    return jdbcTemplate.update(sql, id);
+}
 }
