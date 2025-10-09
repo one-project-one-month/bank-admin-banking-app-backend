@@ -76,8 +76,8 @@
 				<dependency>
 				  <groupId>com.opombanking-user</groupId>
 				  <artifactId>protos</artifactId>
-			  <version>1.0.1-SNAPSHOT</version>
-		</dependency>
+				  <version>1.0.1-SNAPSHOT</version>
+				</dependency>
     </dependencies>
     <build>
         <extensions>
