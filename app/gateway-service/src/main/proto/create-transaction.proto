@@ -11,8 +11,8 @@ service CreateTransaction {
 }
 
 message CreateTransactionRequest {
-  int64  accountTypeId   = 1;
-  string accountNumber   = 2;
+  int64  account_type_id   = 1;
+  string account_number   = 2;
   string name            = 3;
   double amount          = 4;
   string note            = 5;
@@ -29,8 +29,8 @@ message CreateTransactionAccountTypeData {
 
 message CreateTransactionResponse {
   int64 id                 = 1;
-  CreateTransactionAccountTypeData accountType = 2;
-  string accountNumber      = 3;
+  CreateTransactionAccountTypeData account_type = 2;
+  string account_number      = 3;
   string name               = 4;
   double amount             = 5;
   string note               = 6;
