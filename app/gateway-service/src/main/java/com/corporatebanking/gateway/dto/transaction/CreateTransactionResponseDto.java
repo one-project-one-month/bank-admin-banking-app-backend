@@ -2,9 +2,9 @@ package com.corporatebanking.gateway.dto.transaction;
 
 import java.time.LocalDate;
 
-public record TransactionResponseDto(
+public record CreateTransactionResponseDto(
         Long id,
-        AccountTypeResponseDto accountType,
+        CreateTransactionAccountTypeResponseDto accountType,
         String accountNumber,
         String name,
         double amount,

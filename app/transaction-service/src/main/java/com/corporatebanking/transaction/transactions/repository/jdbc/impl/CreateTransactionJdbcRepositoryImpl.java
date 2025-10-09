@@ -1,34 +1,34 @@
 package com.corporatebanking.transaction.transactions.repository.jdbc.impl;
 
-import com.corporatebanking.transaction.transactions.models.AccountTypeData;
-import com.corporatebanking.transaction.transactions.models.TransactionData;
-import com.corporatebanking.transaction.transactions.repository.jdbc.TransactionJdbcRepository;
+import com.corporatebanking.transaction.transactions.models.CreateTransactionAccountTypeData;
+import com.corporatebanking.transaction.transactions.models.CreateTransactionData;
+import com.corporatebanking.transaction.transactions.repository.jdbc.CreateTransactionJdbcRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository {
+public class CreateTransactionJdbcRepositoryImpl implements CreateTransactionJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public TransactionJdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
+    public CreateTransactionJdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private final RowMapper<TransactionData> transactionRowMapper = (rs, rowNum) -> {
-        AccountTypeData accountTypeData = null;
+    private final RowMapper<CreateTransactionData> transactionRowMapper = (rs, rowNum) -> {
+        CreateTransactionAccountTypeData createTransactionAccountTypeData = null;
         Long accountTypeId = rs.getObject("at_id", Long.class);
         if (accountTypeId != null) {
-            accountTypeData = new AccountTypeData(
+            createTransactionAccountTypeData = new CreateTransactionAccountTypeData(
                     accountTypeId,
                     rs.getString("at_name")
             );
         }
 
-        return new TransactionData(
+        return new CreateTransactionData(
                 rs.getLong("t_id"),
-                accountTypeData,
+                createTransactionAccountTypeData,
                 rs.getString("t_account_number"),
                 rs.getString("t_name"),
                 rs.getDouble("t_amount"),
@@ -40,7 +40,7 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository 
 
 
     @Override
-    public TransactionData save(TransactionData transactionData) {
+    public CreateTransactionData save(CreateTransactionData createTransactionData) {
         String insertSql = """
         INSERT INTO transactions (account_type_id, account_number, name, amount, note, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, CURRENT_DATE, CURRENT_DATE)
@@ -48,11 +48,11 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository 
         """;
 
         Long generatedId = jdbcTemplate.queryForObject(insertSql, Long.class,
-                transactionData.accountType().id(),
-                transactionData.accountNumber(),
-                transactionData.name(),
-                transactionData.amount(),
-                transactionData.note());
+                createTransactionData.accountType().id(),
+                createTransactionData.accountNumber(),
+                createTransactionData.name(),
+                createTransactionData.amount(),
+                createTransactionData.note());
 
         String selectSql = """
         SELECT 

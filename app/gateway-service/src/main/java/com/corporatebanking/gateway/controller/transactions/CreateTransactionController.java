@@ -1,11 +1,11 @@
 package com.corporatebanking.gateway.controller.transactions;
 
-import com.corporatebanking.gateway.dto.transaction.AccountTypeResponseDto;
+import com.corporatebanking.gateway.dto.transaction.CreateTransactionAccountTypeResponseDto;
 import com.corporatebanking.gateway.dto.transaction.CreateTransactionRequestDto;
-import com.corporatebanking.gateway.dto.transaction.TransactionResponseDto;
+import com.corporatebanking.gateway.dto.transaction.CreateTransactionResponseDto;
 import com.corporatebanking.transaction.grpc.CreateTransactionGrpc;
 import com.corporatebanking.transaction.grpc.CreateTransactionRequest;
-import com.corporatebanking.transaction.grpc.TransactionResponse;
+import com.corporatebanking.transaction.grpc.CreateTransactionResponse;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,9 +23,9 @@ public class CreateTransactionController {
     private CreateTransactionGrpc.CreateTransactionBlockingStub createTransactionStub;
 
     @PostMapping("/deposit")
-    public ResponseEntity<TransactionResponseDto> createTransaction(
+    public ResponseEntity<CreateTransactionResponseDto> createTransaction(
             @RequestBody CreateTransactionRequestDto requestDto
-            ) {
+    ) {
         CreateTransactionRequest request = CreateTransactionRequest.newBuilder()
                 .setAccountTypeId(requestDto.accountTypeId())
                 .setAccountNumber(requestDto.accountNumber())
@@ -36,19 +36,19 @@ public class CreateTransactionController {
                 .setUpdatedAt(requestDto.updatedAt() != null ? requestDto.updatedAt() : "")
                 .build();
 
-        TransactionResponse response = createTransactionStub.create(request);
-        TransactionResponseDto responseDto = toDto(response);
+        CreateTransactionResponse response = createTransactionStub.createTransaction(request);
+        CreateTransactionResponseDto responseDto = toDto(response);
 
         return ResponseEntity.ok(responseDto);
     }
 
-    private TransactionResponseDto toDto(TransactionResponse t) {
-        AccountTypeResponseDto accountType = new AccountTypeResponseDto(
+    private CreateTransactionResponseDto toDto(CreateTransactionResponse t) {
+        CreateTransactionAccountTypeResponseDto accountType = new CreateTransactionAccountTypeResponseDto(
                 t.getAccountType().getId(),
                 t.getAccountType().getName()
         );
 
-        return new TransactionResponseDto(
+        return new CreateTransactionResponseDto(
                 t.getId(),
                 accountType,
                 t.getAccountNumber(),
