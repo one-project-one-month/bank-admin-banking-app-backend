@@ -1,18 +1,4 @@
 services:
-  #for testing
-#  postgres:
-#    image: postgres:15
-#    environment:
-#      POSTGRES_DB : corporate_banking
-#      POSTGRES_USER : postgres
-#      POSTGRES_PASSWORD : password
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data
-#      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-#    networks:
-#      - banknet
 
   kafka:
     image: apache/kafka:4.0.1-rc2

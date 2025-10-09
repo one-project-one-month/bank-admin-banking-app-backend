@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package com.corporatebanking.updateFaq;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.faq.grpc";
+option java_outer_classname = "UpdateFaqProto";
+
+service UpdateFaqService {
+  rpc UpdateFaq(UpdateFaqRequest) returns (UpdateFaqResponse);
+}
+
+message UpdateFaqRequest {
+  int32 id = 1;
+  string question = 2;
+  string answer = 3;
+  int32 categoryId = 4;
+}
+
+message UpdateFaqCategoryResponse {
+  int32 id = 1;
+  string name = 2;
+}
+
+message UpdateFaqResponse {
+  int32 id = 1;
+  string question = 2;
+  string answer = 3;
+  UpdateFaqCategoryResponse updateFaqCategoryResponse= 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+}
