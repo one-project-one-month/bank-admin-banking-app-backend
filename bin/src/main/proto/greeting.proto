@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.sample.greeting;
+
+option java_multiple_files = true;
+option java_package = "com.sample.greeting.grpc";
+option java_outer_classname = "GreetingProto";
+
+service GreetingService {
+  rpc greeting(GreetingRequest) returns (GreetingResponse);
+}
+
+message GreetingRequest {
+  string name = 1;
+}
+
+message GreetingResponse {
+  string message = 1;
+}

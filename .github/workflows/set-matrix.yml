@@ -1,158 +1,118 @@
-name: Build and Test Services
+name: Change Detection
 
 on:
   push:
     branches:
       - dev
-      - ft/**
+      - "ft/**"
   pull_request:
     branches:
       - dev
-      - ft/**
+      - "ft/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  set-matrix:
+  detect-changes:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       has-changes: ${{ steps.set-matrix.outputs.has-changes }}
+      parent-pom-changed: ${{ steps.check-parent.outputs.changed }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          # Ensure checking out the correct ref for PRs
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-      
-      - name: Detect changed services
+
+      - name: Check parent POM changes
+        id: check-parent
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - 'app/pom.xml'
+
+      - name: Check service changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            auth-service:
+              - 'app/auth-service/**'
+            faq-service:
+              - 'app/faq-service/**'
+            gateway-service:
+              - 'app/gateway-service/**'
+            mail-service:
+              - 'app/mail-service/**'
+            nrc-service:
+              - 'app/nrc-service/**'
+            transaction-service:
+              - 'app/transaction-service/**'
+            upload-service:
+              - 'app/upload-service/**'
+            user-service:
+              - 'app/user-service/**'
+            workflow:
+              - '.github/workflows/**'
+
+      - name: Build service matrix
         id: set-matrix
-        shell: bash
-        env:
-          GITHUB_EVENT_NAME: ${{ github.event_name }}
-        run: |
-          echo " Detecting changed services..."
-          
-          # task: Determine the base and head commits for comparison.
-          echo "==> Determining base commit for comparison..."
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            git fetch origin ${{ github.base_ref }}
-            BASE_REF=$(git merge-base origin/${{ github.base_ref }} HEAD)
-            HEAD_REF="${{ github.event.pull_request.head.sha }}"
-            echo " PR Mode: Comparing $BASE_REF...$HEAD_REF"
-          else
-            BASE_REF="${{ github.event.before }}"
-            HEAD_REF="${{ github.sha }}"
-            
-            if [ "$BASE_REF" = "0000000000000000000000000000000000000000" ] || [ -z "$BASE_REF" ]; then
-              echo "  First push or invalid base - comparing with HEAD~1"
-              BASE_REF="HEAD~1"
-              if ! git rev-parse HEAD~1 >/dev/null 2>&1; then
-                echo "  Initial commit detected - will build all services"
-                BASE_REF=""
-              fi
-            fi
-            echo " Push Mode: Comparing $BASE_REF...$HEAD_REF"
-          fi
-          
-          # task: get the list of changed files
-          echo "==> Getting changed files..."
-          if [ -z "$BASE_REF" ]; then
-            echo "  No base ref found, assuming all services need to be built."
-            CHANGED_FILES=""
-          else
-            CHANGED_FILES=$(git diff --name-only $BASE_REF $HEAD_REF 2>/dev/null || echo "")
-          fi
-
-          # task: determine which services to build
-          echo "==> Determining which services to build..."
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "  No changes detected or first commit - will build all services"
-            CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-          else
-            echo " Changed files:"
-            echo "$CHANGED_FILES"
-            
-            CHANGED_SERVICES=$(echo "$CHANGED_FILES" | grep '^app/' | awk -F'/' '{print $2}' | sort -u || true)
-
-            if echo "$CHANGED_FILES" | grep -q '^shared/'; then
-              echo " Shared code changed - will build all services"
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-            fi
-
-            if echo "$CHANGED_FILES" | grep -q '^\.github/workflows/'; then
-              echo " Workflow changed - will build all services"
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-            fi
-            
-            if echo "$CHANGED_FILES" | grep -qE '^(pom\.xml|build\.gradle|settings\.gradle|gradle\.properties)$'; then
-              echo " Root dependency file changed - will build all services"
-              CHANGED_SERVICES=$(find app -mindepth 1 -maxdepth 1 -type d -exec basename {} \;)
-            fi
-          fi
-
-          # task: filter the list of services
-          echo "==> Filtering service list..."
-          CHANGED_SERVICES=$(echo "$CHANGED_SERVICES" | grep -v '^$' | grep -vE '^(example-service|infra|\..*|node_modules|target|build)$' || true)
-
-          # task: validate that the application directory exists
-          echo "==> Validating 'app' directory..."
-          if [ ! -d "app" ]; then
-            echo " Error: 'app' directory not found. Cannot determine services."
-            echo "matrix=[]" >> $GITHUB_OUTPUT
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-          
-          # Task: Set the final matrix output
-          echo "==> Setting job outputs..."
-          if [ -z "$CHANGED_SERVICES" ]; then
-            echo "ℹ  No services to build."
-            echo "matrix=[]" >> $GITHUB_OUTPUT
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          else
-            echo " Services to build:"
-            echo "$CHANGED_SERVICES"
-            
-            MATRIX=$(echo "$CHANGED_SERVICES" | jq -R -s -c 'split("\n") | map(select(length > 0))' 2>/dev/null || echo "[]")
-            
-            if [ "$MATRIX" = "[]" ] || [ -z "$MATRIX" ]; then
-              echo "  Matrix is empty after JSON conversion."
-              echo "matrix=[]" >> $GITHUB_OUTPUT
-              echo "has-changes=false" >> $GITHUB_OUTPUT
-            else
-              echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-              echo "has-changes=true" >> $GITHUB_OUTPUT
-              echo " Matrix output: $MATRIX"
-            fi
-          fi
-
-  build:
-    needs: set-matrix
-    if: needs.set-matrix.outputs.has-changes == 'true'
-    permissions:
-      security-events: write
-    strategy:
-      matrix:
-        service: ${{ fromJson(needs.set-matrix.outputs.matrix) }}
-    
-    uses: ./.github/workflows/maven-ci.yml
-    with:
-      service: ${{ matrix.service }}
-
-  lint:
-    name: Run Code Linter
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/github-script@v7
         with:
-          fetch-depth: 0
+          script: |
+            const allServices = [
+              'auth-service',
+              'faq-service', 
+              'gateway-service',
+              'mail-service',
+              'nrc-service',
+              'transaction-service',
+              'upload-service',
+              'user-service'
+            ];
+            
+            const parentChanged = '${{ steps.check-parent.outputs.changed }}' === 'true';
+            const workflowChanged = '${{ steps.filter.outputs.workflow }}' === 'true';
+            
+            let services = [];
+            
+            if (parentChanged || workflowChanged) {
+              services = allServices;
+            } else {
+              const filters = {
+                'auth-service': '${{ steps.filter.outputs.auth-service }}',
+                'faq-service': '${{ steps.filter.outputs.faq-service }}',
+                'gateway-service': '${{ steps.filter.outputs.gateway-service }}',
+                'mail-service': '${{ steps.filter.outputs.mail-service }}',
+                'nrc-service': '${{ steps.filter.outputs.nrc-service }}',
+                'transaction-service': '${{ steps.filter.outputs.transaction-service }}',
+                'upload-service': '${{ steps.filter.outputs.upload-service }}',
+                'user-service': '${{ steps.filter.outputs.user-service }}'
+              };
+              
+              services = Object.keys(filters).filter(service => filters[service] === 'true');
+            }
+            
+            const matrix = JSON.stringify(services);
+            const hasChanges = services.length > 0;
+            
+            core.setOutput('matrix', matrix);
+            core.setOutput('has-changes', hasChanges.toString());
 
-      - name: Run Super-Linter
-        uses: github/super-linter@v5
-        env:
-          VALIDATE_ALL_CODE_BASE: true
-          DEFAULT_BRANCH: dev
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Save matrix to file
+        run: |
+          mkdir -p artifacts
+          echo '${{ steps.set-matrix.outputs.matrix }}' | jq -c '.' > artifacts/matrix.json
+          echo '${{ steps.check-parent.outputs.changed }}' > artifacts/parent-pom-changed.txt
+
+      - name: Upload matrix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-matrix
+          path: artifacts/
+          retention-days: 1
