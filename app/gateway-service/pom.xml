@@ -74,8 +74,6 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
     </dependencies>
-    <groupId>com.opombanking-user</groupId>
-    <artifactId>protos</artifactId>
 </dependency>
 
     </dependencies>
