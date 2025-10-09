@@ -1,8 +1,8 @@
-package com.corporatebanking.transaction.transactions.repository.jdbc.impl;
+package com.corporatebanking.transaction.repository.jdbc.impl;
 
-import com.corporatebanking.transaction.transactions.models.CreateTransactionAccountTypeData;
-import com.corporatebanking.transaction.transactions.models.CreateTransactionData;
-import com.corporatebanking.transaction.transactions.repository.jdbc.CreateTransactionJdbcRepository;
+import com.corporatebanking.transaction.models.CreateTransactionAccountTypeData;
+import com.corporatebanking.transaction.models.CreateTransactionData;
+import com.corporatebanking.transaction.repository.jdbc.CreateTransactionJdbcRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;

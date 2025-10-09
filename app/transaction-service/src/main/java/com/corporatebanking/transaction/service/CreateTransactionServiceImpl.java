@@ -1,8 +1,8 @@
-package com.corporatebanking.transaction.transactions.service;
+package com.corporatebanking.transaction.service;
 
-import com.corporatebanking.transaction.transactions.models.CreateTransactionAccountTypeData;
-import com.corporatebanking.transaction.transactions.models.CreateTransactionData;
-import com.corporatebanking.transaction.transactions.repository.jdbc.CreateTransactionJdbcRepository;
+import com.corporatebanking.transaction.models.CreateTransactionAccountTypeData;
+import com.corporatebanking.transaction.models.CreateTransactionData;
+import com.corporatebanking.transaction.repository.jdbc.CreateTransactionJdbcRepository;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;

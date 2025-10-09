@@ -1,4 +1,4 @@
-package com.corporatebanking.transaction.transactions.models;
+package com.corporatebanking.transaction.models;
 
 import java.time.LocalDate;
 
