@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package com.corporatebanking.accountchangestatus;  // Adjusted package for shared use
+
+option java_package = "com.corporatebanking.accountchangestatus.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "AccountChangeStatusProto";
+
+service AccountService {
+  rpc AccountChangeStatusGrpc(AccountChangeStatusRequest) returns (AccountChangeStatusResponse);
+}
+// Request for changing account status
+message AccountChangeStatusRequest {
+  int64 account_id = 1;
+  string new_status = 2;  // e.g., "ACTIVE", "INACTIVE", "SUSPENDED"
+}
+
+// Response for account status change
+message AccountChangeStatusResponse {
+  bool success = 1;
+  string message = 2;
+  string errorCode = 3; // e.g. "VALIDATION_ERROR", "NOT_FOUND", "DB_ERROR"
+}
+
+

@@ -8,6 +8,16 @@ spring:
     password: ${DB_PASSWORD}
     driverClassName: org.postgresql.Driver
 
+
+#for testing
+#spring:
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/corporate_banking
+#    username: postgres
+#    password: admin
+#    driverClassName: org.postgresql.Driver
+
+
 grpc:
   server:
-    port: 9004
+    port: 9094

@@ -16,6 +16,7 @@ grpc:
   client:
     user-service:
       address: "static://user-service:9091"
+
       negotiation-type: plaintext
     faq-service:
       address: "static://faq-service:9004"
@@ -26,10 +27,3 @@ grpc:
     transaction-service:
       address: 'static://transaction-service:9095'
       negotiation-type: plaintext
-#    faq-service:
-#      address: 'static://faq-service:9094'
-#      negotiation-type: plaintext
-#
-#    transaction-service:
-#      address: 'static://transaction-service:9095'
-#      negotiation-type: plaintext
