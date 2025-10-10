@@ -1,7 +1,7 @@
-package com.corporatebanking.faq.repository.impl;
+package com.corporatebanking.faq.features.updateFaq.repository.impl;
 
-import com.corporatebanking.faq.model.UpdateFaqModel;
-import com.corporatebanking.faq.repository.UpdateFaqRepository;
+import com.corporatebanking.faq.features.updateFaq.model.UpdateFaqModel;
+import com.corporatebanking.faq.features.updateFaq.repository.UpdateFaqRepository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
