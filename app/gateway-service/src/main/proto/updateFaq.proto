@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package com.corporatebanking.faq;
+package com.corporatebanking.updateFaq;
 
 option java_multiple_files = true;
 option java_package = "com.corporatebanking.faq.grpc";
