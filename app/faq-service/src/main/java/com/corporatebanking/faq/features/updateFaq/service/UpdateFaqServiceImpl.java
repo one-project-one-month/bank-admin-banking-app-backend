@@ -1,4 +1,4 @@
-package com.corporatebanking.faq.service;
+package com.corporatebanking.faq.features.updateFaq.service;
 
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -13,11 +13,11 @@ import com.corporatebanking.faq.grpc.UpdateFaqResponse;
 import com.corporatebanking.faq.grpc.UpdateFaqCategoryResponse;
 import com.corporatebanking.faq.grpc.UpdateFaqServiceGrpc;
 
-import com.corporatebanking.faq.repository.UpdateFaqRepository;
-import com.corporatebanking.faq.repository.UpdateFaqCategoryRepository;
+import com.corporatebanking.faq.features.updateFaq.repository.UpdateFaqRepository;
+import com.corporatebanking.faq.features.updateFaq.repository.UpdateFaqCategoryRepository;
 
-import com.corporatebanking.faq.model.UpdateFaqModel;
-import com.corporatebanking.faq.model.UpdateFaqCategoryModel;
+import com.corporatebanking.faq.features.updateFaq.model.UpdateFaqModel;
+import com.corporatebanking.faq.features.updateFaq.model.UpdateFaqCategoryModel;
 
 @GrpcService
 public class UpdateFaqServiceImpl extends UpdateFaqServiceGrpc.UpdateFaqServiceImplBase {
