@@ -9,6 +9,9 @@ option java_outer_classname = "CreateFaqProto";
 service CreateFaqService{
     rpc CreateFaq(CreateFaqRequest) returns (CreateFaqResponse);
     rpc CreateFaqCategory(CreateFaqCategoryRequest) returns (CreateFaqCategoryResponse);
+    rpc GetFaqById(GetFaqRequest) returns (CreateFaqResponse);
+    
+    rpc DeleFaqById(GetFaqRequest) returns (DeleteFaq);
 }
 
 message CreateFaqCategoryRequest{
@@ -25,6 +28,13 @@ message CreateFaqCategoryResponse{
     int32 id = 1;
     string name = 2;
 }
+
+message DeleteFaq{
+string message=1; }
+
+message GetFaqRequest{
+  int32 id=1;
+  }
 
 message CreateFaqResponse{
     int32 id = 1;

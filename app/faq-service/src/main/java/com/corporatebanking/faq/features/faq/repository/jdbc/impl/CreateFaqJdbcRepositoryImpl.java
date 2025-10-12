@@ -58,4 +58,10 @@ public class CreateFaqJdbcRepositoryImpl implements CreateFaqJdbcRepository {
         String sql = "SELECT * FROM FAQ WHERE id = ? ";
         return jdbcTemplate.query(sql, faqDataRowMapper, id).stream().findFirst();
     }
+
+    @Override
+    public com.corporatebanking.faq.grpc.DeleteFaq deleteById(int id) {
+        return null;
+    }
+
 }

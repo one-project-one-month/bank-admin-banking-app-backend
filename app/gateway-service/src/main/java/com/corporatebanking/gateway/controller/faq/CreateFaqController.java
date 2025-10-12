@@ -5,10 +5,7 @@ import com.corporatebanking.gateway.dto.faq.*;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.ZoneId;
 
@@ -80,6 +77,65 @@ public class CreateFaqController {
         }
     }
 
+    @GetMapping("/get/{id}")
+    public ResponseEntity<CreateFaqResponseDto<CreateFaqGrpcResponseDto>> getFaqById(@PathVariable("id")int id) {
+        try {
+            GetFaqRequest grpcRequest = GetFaqRequest.newBuilder()
+                    .setId(id)
+                    .build();
+
+            CreateFaqResponse response = createFaqServiceBlockingStub.getFaqById(grpcRequest);
+
+            CreateFaqResponseDto<CreateFaqGrpcResponseDto> responseDto = new CreateFaqResponseDto<>(
+                    HttpStatus.OK.value(),
+                    "FAQ retrieved successfully",
+                    toDto(response)
+            );
+
+            return ResponseEntity.ok(responseDto);
+
+        } catch (io.grpc.StatusRuntimeException e) {
+            HttpStatus status = mapGrpcStatusToHttp(e.getStatus().getCode());
+
+            CreateFaqResponseDto<CreateFaqGrpcResponseDto> responseDto = new CreateFaqResponseDto<>(
+                    status.value(),
+                    e.getStatus().getDescription() == null ? "Unexpected Error" : e.getStatus().getDescription(),
+                    null
+            );
+
+            return ResponseEntity.status(status).body(responseDto);
+        }
+    }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<CreateFaqResponseDto<Object>> deleteFaqById(@PathVariable("id")int id) {
+        try {
+            GetFaqRequest grpcRequest = GetFaqRequest.newBuilder()
+                    .setId(id)
+                    .build();
+
+            DeleteFaq response = createFaqServiceBlockingStub.deleFaqById(grpcRequest);
+
+            CreateFaqResponseDto<Object> responseDto = new CreateFaqResponseDto<>(
+                   204,
+                    response.getMessage(),
+                    ""
+            );
+
+            return ResponseEntity.status(200).body(responseDto);
+
+        } catch (io.grpc.StatusRuntimeException e) {
+            HttpStatus status = mapGrpcStatusToHttp(e.getStatus().getCode());
+
+            CreateFaqResponseDto<Object> responseDto = new CreateFaqResponseDto<>(
+                    status.value(),
+                    e.getStatus().getDescription() == null ? "Unexpected Error" : e.getStatus().getDescription(),
+                    null
+            );
+
+            return ResponseEntity.status(status).body(responseDto);
+        }
+    }
+
     private CreateFaqGrpcResponseDto toDto(CreateFaqResponse faqResponse){
 
         CreateFaqCategoryResponseDto categoryResponseDto = new CreateFaqCategoryResponseDto(
@@ -96,6 +152,7 @@ public class CreateFaqController {
                 faqResponse.getUpdatedAt()
         );
     }
+
 
     private HttpStatus mapGrpcStatusToHttp(io.grpc.Status.Code code){
         return switch (code){

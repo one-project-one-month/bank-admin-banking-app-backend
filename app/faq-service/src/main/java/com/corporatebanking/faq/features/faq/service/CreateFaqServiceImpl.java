@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @GrpcService
@@ -121,5 +120,62 @@ public class CreateFaqServiceImpl extends CreateFaqServiceGrpc.CreateFaqServiceI
             );
         }
     }
+
+    @Override
+    public void deleFaqById(GetFaqRequest request, StreamObserver<DeleteFaq> responseObserver) {
+        faqJdbcRepository.deleteById(request.getId());
+        DeleteFaq response = DeleteFaq.newBuilder()
+                .setMessage("Faq with ID " + request.getId() + " deleted successfully.")
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+
+
+    @Override
+    public void getFaqById(GetFaqRequest request, StreamObserver<CreateFaqResponse> responseObserver) {
+        try {
+            Optional<CreateFaqData> optionalFaq = faqJdbcRepository.findById(request.getId());
+
+            if (optionalFaq.isPresent()) {
+                CreateFaqData faq = optionalFaq.get();
+
+                CreateFaqCategoryData categoryData = faqCategoryJdbcRepository.findById((int) faq.categoryId())
+                        .orElseThrow(() -> new CategoryNotFoundException("Category not found for FAQ"));
+
+                CreateFaqCategoryResponse categoryResponse = CreateFaqCategoryResponse.newBuilder()
+                        .setId(categoryData.id())
+                        .setName(categoryData.name())
+                        .build();
+
+                CreateFaqResponse response = CreateFaqResponse.newBuilder()
+                        .setId(faq.id())
+                        .setQuestion(faq.question())
+                        .setAnswer(faq.answer())
+                        .setCreateFaqCategoryResponse(categoryResponse)
+                        .setCreatedAt(faq.createdAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                        .setUpdatedAt(faq.updatedAt() == null ? 0 : faq.updatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli())
+                        .build();
+
+                responseObserver.onNext(response);
+                responseObserver.onCompleted();
+            } else {
+                responseObserver.onError(
+                        Status.NOT_FOUND
+                                .withDescription("FAQ not found with ID: " + request.getId())
+                                .asRuntimeException()
+                );
+            }
+        } catch (Exception ex) {
+            responseObserver.onError(
+                    Status.INTERNAL
+                            .withDescription("Error retrieving FAQ: " + ex.getMessage())
+                            .asRuntimeException()
+            );
+        }
+    }
+
+
 
 }

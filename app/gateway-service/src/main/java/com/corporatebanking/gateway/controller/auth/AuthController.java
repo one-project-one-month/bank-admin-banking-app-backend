@@ -28,8 +28,8 @@ public class AuthController {
         logger.info("Proxying login request for user: {}", loginRequest.username());
         try {
             ResponseEntity<TokenResponse> response = restTemplate.postForEntity(
-                authServiceUrl, 
-                loginRequest, 
+                authServiceUrl,
+                loginRequest,
                 TokenResponse.class
             );
             return ResponseEntity.status(response.getStatusCode()).body(response.getBody());

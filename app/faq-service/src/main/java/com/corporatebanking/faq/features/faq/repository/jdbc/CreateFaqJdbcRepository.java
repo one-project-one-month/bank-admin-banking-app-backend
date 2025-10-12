@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface CreateFaqJdbcRepository {
     public CreateFaqData save(CreateFaqData createFaqData);
     public Optional<CreateFaqData> findById(int id);
+    public com.corporatebanking.faq.grpc.DeleteFaq deleteById(int id);
 }
