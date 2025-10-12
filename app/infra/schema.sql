@@ -129,6 +129,27 @@ CREATE TABLE "transactions" (
     CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(id)
 );
 
+--create account type table
+CREATE TABLE IF NOT EXISTS account_type (
+        id BIGSERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL
+);
+
+--Create table for storing transactions
+CREATE TABLE IF NOT EXISTS "transactions" (
+        id BIGSERIAL PRIMARY KEY,
+        account_type_id BIGINT NOT NULL,
+        account_number VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        amount DOUBLE PRECISION NOT NULL,
+        note TEXT,
+        created_at DATE NOT NULL,
+        updated_at DATE,
+
+    -- Foreign key constraint
+    CONSTRAINT fk_account_type FOREIGN KEY (account_type_id) REFERENCES account_type(id)
+);
+
 -- Insert NRC code categories (States/Regions and NRC Type)
 INSERT INTO "nrc_code" ("id", "name") VALUES
 (1, 'KACHIN_STATE_TOWNSHIP_CODES'),
@@ -233,6 +254,12 @@ INSERT INTO "nrc_code_value" ("code_id", "value") VALUES
 (16, '1'),(16, '2'),(16, '3'),(16, '4'),(16, '5'),(16, '6'),(16, '7'),
 (16, '8'),(16, '9'),(16, '10'),(16, '11'),(16, '12'),(16, '13'),(16, '14');
 
+
+INSERT INTO "account_type" (name) VALUES
+                                      ('Savings'),
+                                      ('Special'),
+                                      ('Organization')
+ON CONFLICT DO NOTHING;
 -- ACCOUNT_TYPE SAMPLE
 INSERT INTO account_type (id, name) VALUES (1, 'Savings Account');
 INSERT INTO account_type (id, name) VALUES (2, 'Checking Account');
