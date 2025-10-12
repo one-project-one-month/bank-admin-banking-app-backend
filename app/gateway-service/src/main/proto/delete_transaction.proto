@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package com.corporatebanking.transaction;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.transaction.grpc";
+option java_outer_classname = "DeleteTransactionProto";
+
+// Service for handling transaction deletions
+service TransactionService {
+  rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse);
+}
+
+message DeleteTransaction {
+  int64 id = 1;
+  DeleteAccountType account_type = 2;
+  string accountNumber = 3;
+  string name = 4;
+  double amount = 5;
+  string note = 6;
+  string deleted_at = 7;
+}
+
+message DeleteAccountType {
+  int64 id = 1;
+  string name = 2;
+}
+
+message DeleteTransactionRequest {
+  int64 id = 1;
+}
+
+message DeleteTransactionResponse {
+  bool success = 1;
+  string message = 2;
+}

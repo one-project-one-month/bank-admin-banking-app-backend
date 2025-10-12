@@ -1,0 +1,147 @@
+name: Build Services
+
+on:
+  workflow_run:
+    workflows: ["Change Detection"]
+    types: [completed]
+
+jobs:
+  prepare-build:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    outputs:
+      matrix: ${{ steps.load-matrix.outputs.matrix }}
+      has-changes: ${{ steps.load-matrix.outputs.has-changes }}
+      parent-pom-changed: ${{ steps.load-matrix.outputs.parent-pom-changed }}
+    
+    steps:
+      - name: Download matrix artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-matrix
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Load matrix
+        id: load-matrix
+        run: |
+          MATRIX=$(cat matrix.json)
+          PARENT_CHANGED=$(cat parent-pom-changed.txt)
+          
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "parent-pom-changed=$PARENT_CHANGED" >> $GITHUB_OUTPUT
+          
+          if [ "$MATRIX" = "[]" ]; then
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+          fi
+
+  build-parent:
+    needs: prepare-build
+    if: needs.prepare-build.outputs.parent-pom-changed == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-parent-${{ hashFiles('app/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-parent-
+            ${{ runner.os }}-maven-
+
+      - name: Build parent POM
+        working-directory: app
+        run: mvn clean install -N -DskipTests
+
+  build-services:
+    needs: [prepare-build, build-parent]
+    if: |
+      always() && 
+      needs.prepare-build.outputs.has-changes == 'true' &&
+      (needs.build-parent.result == 'success' || needs.build-parent.result == 'skipped')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        service: ${{ fromJson(needs.prepare-build.outputs.matrix) }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('app/pom.xml', format('app/{0}/pom.xml', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Cache service build
+        uses: actions/cache@v4
+        with:
+          path: |
+            app/${{ matrix.service }}/target/classes
+            app/${{ matrix.service }}/target/generated-sources
+          key: ${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('app/{0}/pom.xml', matrix.service)) }}-${{ hashFiles(format('app/{0}/src/**', matrix.service)) }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.service }}-${{ hashFiles(format('app/{0}/pom.xml', matrix.service)) }}-
+            ${{ runner.os }}-${{ matrix.service }}-
+
+      - name: Check if proto files exist
+        id: check-proto
+        run: |
+          if [ -d "app/${{ matrix.service }}/src/main/proto" ]; then
+            echo "has-proto=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-proto=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install parent POM
+        working-directory: app
+        run: mvn install -N -DskipTests -q
+
+      - name: Generate protobuf sources
+        if: steps.check-proto.outputs.has-proto == 'true'
+        working-directory: app
+        run: mvn generate-sources -pl ${{ matrix.service }} -am
+
+      - name: Build service with dependencies
+        working-directory: app
+        run: |
+          mvn clean install -e -pl ${{ matrix.service }} -am -DskipTests
+        continue-on-error: false
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: |
+            app/${{ matrix.service }}/target/*.jar
+            !app/${{ matrix.service }}/target/*-sources.jar
+            !app/${{ matrix.service }}/target/*-javadoc.jar
+          retention-days: 7
+          if-no-files-found: warn

@@ -1,6 +1,6 @@
 FROM maven:3.8.7-eclipse-temurin-17 as build
 WORKDIR /app
-COPY pom.xml .
+COPY ../transaction-service/pom.xml .
 COPY src ./src
 COPY src/main/proto ./src/main/proto
 
