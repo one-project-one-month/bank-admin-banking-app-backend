@@ -6,31 +6,31 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import com.corporatebanking.transaction.transactions.models.AccountTypeData;
-import com.corporatebanking.transaction.transactions.models.TransactionData;
-import com.corporatebanking.transaction.transactions.repository.jdbc.TransactionJdbcRepository;
+import com.corporatebanking.transaction.transactions.models.GetAllAccountTypeData;
+import com.corporatebanking.transaction.transactions.models.GetAllTransactionData;
+import com.corporatebanking.transaction.transactions.repository.jdbc.GetAllTransactionJdbcRepository;
 
 @Repository
-public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository{
+public class GetAllTransactionJdbcRepositoryImpl implements GetAllTransactionJdbcRepository{
 
     private final JdbcTemplate jdbcTemplate;
 
-    public TransactionJdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
+    public GetAllTransactionJdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public final RowMapper<TransactionData> transactionRowMapper = (rs, rowNum) ->{
+    public final RowMapper<GetAllTransactionData> transactionRowMapper = (rs, rowNum) ->{
 
-        AccountTypeData accountTypeData=null;
+        GetAllAccountTypeData accountTypeData=null;
         Long accountTypeId = rs.getObject("at_id", Long.class);
         if(accountTypeId != null){
-            accountTypeData = new AccountTypeData(
+            accountTypeData = new GetAllAccountTypeData(
                 accountTypeId,
                 rs.getString("at_name")
             );
         }
 
-        return new TransactionData(
+        return new GetAllTransactionData(
             rs.getLong("t_id"),
             accountTypeData,
             rs.getString("t_account_number"),
@@ -43,7 +43,7 @@ public class TransactionJdbcRepositoryImpl implements TransactionJdbcRepository{
     };
 
     @Override
-    public List<TransactionData> findAll() {
+    public List<GetAllTransactionData> findAll() {
         String sql = """
         SELECT 
             t.id              AS t_id,

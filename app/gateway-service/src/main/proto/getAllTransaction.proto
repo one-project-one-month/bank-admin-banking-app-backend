@@ -3,16 +3,16 @@ package com.corporatebanking.transaction;
 
 option java_multiple_files = true;
 option java_package = "com.corporatebanking.transaction.grpc";
-option java_outer_classname = "TransactionProto";
+option java_outer_classname = "getAllTransactionsProto";
 
-service TransactionService {
-    rpc GetAllTransactions(GetAllTransactionsRequest) returns (TransactionListResponse);
+service GetAllTransactionService {
+    rpc GetAllTransactions(GetAllTransactionsRequest) returns (GetAllTransactionListResponse);
 }
 message GetAllTransactionsRequest {
 }
-message TransactionResponse {
+message GetAllTransactionResponse {
     int64 id=1;
-    repeated AccountType account_type=2;
+    repeated GetAllAccountType account_type=2;
     string accountNumber=3;
     string name=4;
     double amount=5;
@@ -20,11 +20,11 @@ message TransactionResponse {
     string created_at=7;
     string updated_at=8;
 }
-message AccountType{
+message GetAllAccountType{
     int64 id=1;
     string name=2;
 }
 
-message TransactionListResponse {
-    repeated TransactionResponse transactions = 1;
+message GetAllTransactionListResponse {
+    repeated GetAllTransactionResponse transactions = 1;
 }   

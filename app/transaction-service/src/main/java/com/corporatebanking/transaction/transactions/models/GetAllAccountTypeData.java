@@ -1,6 +1,6 @@
 package com.corporatebanking.transaction.transactions.models;
 
-public record AccountTypeData(
+public record GetAllAccountTypeData(
     Long id,
     String name
 ) {}
