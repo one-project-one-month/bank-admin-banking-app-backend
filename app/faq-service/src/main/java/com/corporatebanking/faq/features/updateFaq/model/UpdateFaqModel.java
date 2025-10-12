@@ -1,4 +1,4 @@
-package com.corporatebanking.faq.model;
+package com.corporatebanking.faq.features.updateFaq.model;
 
 import java.time.LocalDateTime;
 

@@ -1,6 +1,6 @@
-package com.corporatebanking.faq.repository;
+package com.corporatebanking.faq.features.updateFaq.repository;
 
-import com.corporatebanking.faq.model.UpdateFaqModel;
+import com.corporatebanking.faq.features.updateFaq.model.UpdateFaqModel;
 
 import java.util.Optional;
 
