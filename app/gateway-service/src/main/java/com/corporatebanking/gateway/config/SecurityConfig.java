@@ -28,19 +28,20 @@ public class SecurityConfig {
     public SecurityConfig(RequestLoggingFilter requestLoggingFilter) {
         this.requestLoggingFilter = requestLoggingFilter;
     }
-
     @Bean
     @Order(1)
     public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/auth/login","/api/v1/faq/**")
+                .securityMatcher("/auth/login", "/api/v1/transactions/**")
                 .addFilterBefore(requestLoggingFilter, AuthorizationFilter.class)
-                .authorizeHttpRequests(authorize -> authorize.requestMatchers("/api/v1/faq/**").permitAll()
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers(HttpMethod.POST, "/api/v1/transactions/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/transactions/**").permitAll()
+                        .anyRequest().permitAll()
                 );
         return http.build();
     }
-
     @Bean
     @Order(2)
     public SecurityFilterChain privateFilterChain(HttpSecurity http) throws Exception {
@@ -63,7 +64,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
@@ -71,7 +71,6 @@ public class SecurityConfig {
         return converter;
     }
 }
-
 class KeycloakRealmRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
     @Override
     public Collection<GrantedAuthority> convert(Jwt jwt) {

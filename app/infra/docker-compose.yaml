@@ -1,19 +1,18 @@
 services:
 
-  postgres:
-      image: postgres:15
-      environment:
-        POSTGRES_DB: corporate_banking
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: 123
-      ports:
-        - "5432:5432"
-      volumes:
-        - postgres_data:/var/lib/postgresql/data
-        - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
-      networks:
-        - banknet
-
+  #  postgres-db:
+  #    image: postgres:15
+  #    container_name: postgres-db
+  #    ports:
+  #      - "5432:5432"
+  #    environment:
+  #      POSTGRES_DB: Core_Bank
+  #      POSTGRES_USER: postgres
+  #      POSTGRES_PASSWORD: postgres
+  #    volumes:
+  #      - postgres_data:/var/lib/postgresql/data
+  #    networks:
+  #      - banknet
 
   kafka:
     image: apache/kafka:4.0.1-rc2
@@ -143,3 +142,6 @@ services:
 networks:
   banknet:
     driver: bridge
+
+volumes:
+  postgres_data:
