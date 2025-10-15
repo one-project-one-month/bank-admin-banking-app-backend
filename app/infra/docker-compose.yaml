@@ -59,8 +59,8 @@ services:
       - DB_URL=${CORPORATE_DB_URL}
       - DB_USERNAME=${CORPORATE_DB_USERNAME}
       - DB_PASSWORD=${CORPORATE_DB_PASSWORD}
-    depends_on:
-      - postgres
+    # depends_on:
+    #   - postgres
 
   nrc-service:
     build: ../nrc-service
@@ -138,6 +138,17 @@ services:
       - banknet
     ports:
       - "8080:8080"
+
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: dozzle-infra
+    restart: unless-stopped
+    ports:
+      - "1000:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - banknet
 
 networks:
   banknet:

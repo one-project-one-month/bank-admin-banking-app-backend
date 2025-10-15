@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package com.corporatebanking.faq;
+
+option java_multiple_files = true;
+option java_package = "com.corporatebanking.faq.grpc";
+option java_outer_classname = "FaqProto";
+
+service FaqService {
+  rpc GetFaq(GetFaqRequest) returns (FaqResponse);
+  rpc CreateFaq(CreateFaqRequest) returns (FaqResponse);
+  rpc UpdateFaq(UpdateFaqRequest) returns (FaqResponse);
+  rpc DeleteFaq(DeleteFaqRequest) returns (DeleteFaqResponse);
+  rpc CreateFaqCategory(CreateFaqCategoryRequest) returns (FaqCategoryResponse);
+}
+
+message Faq {
+  int32 id = 1;
+  string question = 2;
+  string answer = 3;
+  int32 category_id = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message FaqCategory {
+    int32 id = 1;
+    string name = 2;
+}
+
+message FaqResponse {
+  int32 id = 1;
+  string question = 2;
+  string answer = 3;
+  FaqCategory category = 4;
+  string created_at = 5;
+  string updated_at = 6;
+}
+
+message GetFaqRequest {
+  int32 id = 1;
+}
+
+message CreateFaqRequest {
+  string question = 1;
+  string answer = 2;
+  int32 category_id = 3;
+}
+
+message CreateFaqCategoryRequest {
+    string name = 1;
+}
+
+message UpdateFaqRequest {
+  int32 id = 1;
+  string question = 2;
+  string answer = 3;
+  int32 category_id = 4;
+}
+
+message DeleteFaqRequest {
+  int32 id = 1;
+}
+
+message DeleteFaqResponse {
+  string message = 1;
+}
+
+message FaqCategoryResponse {
+    int32 id = 1;
+    string name = 2;
+}
