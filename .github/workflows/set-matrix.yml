@@ -10,9 +10,9 @@ on:
       - dev
       - "ft/**"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: false
 
 jobs:
   detect-changes:
@@ -103,16 +103,22 @@ jobs:
             
             core.setOutput('matrix', matrix);
             core.setOutput('has-changes', hasChanges.toString());
+  call-build:
+      needs: detect-changes
+      if: needs.detect-changes.outputs.has-changes == 'true'
+      uses: ./.github/workflows/build.yml
+      with:
+        matrix: ${{ needs.detect-changes.outputs.matrix }}
+        has-changes: ${{ needs.detect-changes.outputs.has-changes }}
+        parent-pom-changed: ${{ needs.detect-changes.outputs.parent-pom-changed }}
+        sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      secrets: inherit
 
-      - name: Save matrix to file
-        run: |
-          mkdir -p artifacts
-          echo '${{ steps.set-matrix.outputs.matrix }}' | jq -c '.' > artifacts/matrix.json
-          echo '${{ steps.check-parent.outputs.changed }}' > artifacts/parent-pom-changed.txt
-
-      - name: Upload matrix artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-matrix
-          path: artifacts/
-          retention-days: 1
+  call-publish:
+      needs: [detect-changes, call-build]
+      if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+      uses: ./.github/workflows/publish.yml
+      with:
+        matrix: ${{ needs.detect-changes.outputs.matrix }}
+        sha: ${{ github.sha }}
+      secrets: inherit

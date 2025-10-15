@@ -1,52 +1,31 @@
 name: Build Services
 
 on:
-  workflow_run:
-    workflows: ["Change Detection"]
-    types: [completed]
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+      has-changes:
+        required: true
+        type: string
+      parent-pom-changed:
+        required: true
+        type: string
+      sha:
+        required: true
+        type: string
 
 jobs:
-  prepare-build:
-    runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
-    outputs:
-      matrix: ${{ steps.load-matrix.outputs.matrix }}
-      has-changes: ${{ steps.load-matrix.outputs.has-changes }}
-      parent-pom-changed: ${{ steps.load-matrix.outputs.parent-pom-changed }}
-    
-    steps:
-      - name: Download matrix artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-matrix
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Load matrix
-        id: load-matrix
-        run: |
-          MATRIX=$(cat matrix.json)
-          PARENT_CHANGED=$(cat parent-pom-changed.txt)
-          
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
-          echo "parent-pom-changed=$PARENT_CHANGED" >> $GITHUB_OUTPUT
-          
-          if [ "$MATRIX" = "[]" ]; then
-            echo "has-changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has-changes=true" >> $GITHUB_OUTPUT
-          fi
-
   build-parent:
-    needs: prepare-build
-    if: needs.prepare-build.outputs.parent-pom-changed == 'true'
+    if: inputs.parent-pom-changed == 'true'
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ inputs.sha }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -68,23 +47,23 @@ jobs:
         run: mvn clean install -N -DskipTests
 
   build-services:
-    needs: [prepare-build, build-parent]
+    needs: [build-parent]
     if: |
       always() && 
-      needs.prepare-build.outputs.has-changes == 'true' &&
+      inputs.has-changes == 'true' &&
       (needs.build-parent.result == 'success' || needs.build-parent.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 20
       matrix:
-        service: ${{ fromJson(needs.prepare-build.outputs.matrix) }}
+        service: ${{ fromJson(inputs.matrix) }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ inputs.sha }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -123,16 +102,16 @@ jobs:
       - name: Install parent POM
         working-directory: app
         run: mvn install -N -DskipTests -q
-
+      
       - name: Generate protobuf sources
         if: steps.check-proto.outputs.has-proto == 'true'
         working-directory: app
-        run: mvn generate-sources -pl ${{ matrix.service }} -am
+        run: mvn generate-sources -pl infra/protos,${{ matrix.service }} -am
 
       - name: Build service with dependencies
         working-directory: app
         run: |
-          mvn clean install -e -pl ${{ matrix.service }} -am -DskipTests
+          mvn clean install -e -pl infra/protos,${{ matrix.service }} -am -DskipTests
         continue-on-error: false
 
       - name: Upload JAR artifact
